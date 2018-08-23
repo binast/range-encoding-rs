@@ -33,8 +33,8 @@ impl Writer {
         let segment = icdf.at_index(index)
           .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid symbol"))?;
         unsafe {
-            imported_encode::ec_encode(&mut self.state, segment.low, segment.next, icdf.width());
-            self.check_status()?;
+            imported_encode::ec_encode(&mut self.state, segment.low, segment.next, icdf.width())
+                .map_err(|_| std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "symbol(): Too much data"))?;
         };
         Ok(())
     }
@@ -53,28 +53,25 @@ impl Writer {
     }
 */
 
-    pub fn done(mut self) -> Vec<u8> {
-        debug_assert_eq!(self.finalized, false);
-        self.finalized = true;
-        let length = unsafe {
-            imported_encode::ec_enc_done(&mut self.state);
-            imported_encode::ec_range_bytes(&mut self.state)
-        };
+    pub fn done(mut self) -> Result<Vec<u8>, std::io::Error> {
+        let length = self.finalize()?;
         let mut bytes : Vec<u8> = vec![];
         std::mem::swap(&mut bytes, &mut self.destination);
         unsafe {
             bytes.set_len(length as usize);
         }
-        bytes
+        Ok(bytes)
     }
 
-    unsafe fn check_status(&mut self) -> Result<(), std::io::Error> {
-        let status = imported_encode::ec_get_error(&mut self.state);
-        if status != 0 {
-            debug!(target: "opus", "Writer: check_status => {}", status);
-            unimplemented!();
-        }
-        Ok(())
+    fn finalize(&mut self) -> Result<usize, std::io::Error> {
+        debug_assert_eq!(self.finalized, false);
+        self.finalized = true;
+        let length = unsafe {
+            imported_encode::ec_enc_done(&mut self.state)
+                .map_err(|_| std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "done(): Too much data"))?;
+            imported_encode::ec_range_bytes(&mut self.state)
+        };
+        Ok(length as usize)
     }
 }
 
@@ -83,8 +80,7 @@ impl Drop for Writer {
         if self.finalized {
             return
         }
-        unsafe {
-            imported_encode::ec_enc_done(&mut self.state);
-        }
+        self.finalize()
+            .expect("Could not drop writer");
     }
 }

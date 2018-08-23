@@ -22,7 +22,8 @@ fn probabilities_roundtrip() {
             writer.symbol(index, &probabilities)
                 .expect("Could not write symbol");
         }
-        let encoded = writer.done();
+        let encoded = writer.done()
+            .expect("Could not finalize writer");
         eprintln!("Wrote {} bytes to {} bytes",
             sample.len(), encoded.len());
 
