@@ -6,9 +6,7 @@
          unused_mut)]
 
 extern crate libc;
-extern "C" {
-    pub type __sFILEX;
-}
+
 pub type int32_t = libc::c_int;
 pub type uint32_t = libc::c_uint;
 pub type __uint16_t = libc::c_ushort;
@@ -57,160 +55,21 @@ pub struct __sbuf {
     pub _base: *mut libc::c_uchar,
     pub _size: libc::c_int,
 }
-#[derive ( Copy , Clone )]
-#[repr(C)]
-pub struct __sFILE {
-    pub _p: *mut libc::c_uchar,
-    pub _r: libc::c_int,
-    pub _w: libc::c_int,
-    pub _flags: libc::c_short,
-    pub _file: libc::c_short,
-    pub _bf: __sbuf,
-    pub _lbfsize: libc::c_int,
-    pub _cookie: *mut libc::c_void,
-    pub _close: Option<unsafe extern "C" fn(_: *mut libc::c_void)
-                           -> libc::c_int>,
-    pub _read: Option<unsafe extern "C" fn(_: *mut libc::c_void,
-                                           _: *mut libc::c_char,
-                                           _: libc::c_int) -> libc::c_int>,
-    pub _seek: Option<unsafe extern "C" fn(_: *mut libc::c_void, _: fpos_t,
-                                           _: libc::c_int) -> fpos_t>,
-    pub _write: Option<unsafe extern "C" fn(_: *mut libc::c_void,
-                                            _: *const libc::c_char,
-                                            _: libc::c_int) -> libc::c_int>,
-    pub _ub: __sbuf,
-    pub _extra: *mut __sFILEX,
-    pub _ur: libc::c_int,
-    pub _ubuf: [libc::c_uchar; 3],
-    pub _nbuf: [libc::c_uchar; 1],
-    pub _lb: __sbuf,
-    pub _blksize: libc::c_int,
-    pub _offset: fpos_t,
-}
-pub type FILE = __sFILE;
-#[derive ( Copy , Clone )]
-#[repr ( C )]
-pub union unnamed_1 {
-    __ld: libc::c_double,
-    __p: unnamed_0,
-}
-#[derive ( Copy , Clone )]
-#[repr(C)]
-pub struct __double2 {
-    pub __sinval: libc::c_double,
-    pub __cosval: libc::c_double,
-}
-#[derive ( Copy , Clone )]
-#[repr(C)]
-pub struct __float2 {
-    pub __sinval: libc::c_float,
-    pub __cosval: libc::c_float,
-}
+
 pub type ec_ctx_0 = ec_ctx;
-#[derive ( Copy , Clone )]
-#[repr ( C )]
-pub union unnamed_2 {
-    __f: libc::c_float,
-    __u: libc::c_uint,
-}
 
-unsafe extern "C" fn _OSSwapInt16(mut _data: __uint16_t) -> __uint16_t {
-    return ((_data as libc::c_int) << 8i32 | _data as libc::c_int >> 8i32) as
-               __uint16_t;
-}
-unsafe extern "C" fn _OSSwapInt32(mut _data: __uint32_t) -> __uint32_t {
-    return _data.swap_bytes();
-}
-unsafe extern "C" fn _OSSwapInt64(mut _data: __uint64_t) -> __uint64_t {
-    return _data.swap_bytes();
-}
-
-unsafe extern "C" fn __inline_isfinitef(mut __x: libc::c_float)
- -> libc::c_int {
-    return (__x == __x && __x.abs() != ::std::f32::INFINITY) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isfinited(mut __x: libc::c_double)
- -> libc::c_int {
-    return (__x == __x && __x.abs() != ::std::f64::INFINITY) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isfinitel(mut __x: libc::c_double)
- -> libc::c_int {
-    return (__x == __x && __x.abs() != ::std::f64::INFINITY) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isinff(mut __x: libc::c_float) -> libc::c_int {
-    return (__x.abs() == ::std::f32::INFINITY) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isinfd(mut __x: libc::c_double) -> libc::c_int {
-    return (__x.abs() == ::std::f64::INFINITY) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isinfl(mut __x: libc::c_double) -> libc::c_int {
-    return (__x.abs() == ::std::f64::INFINITY) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isnanf(mut __x: libc::c_float) -> libc::c_int {
-    return (__x != __x) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isnand(mut __x: libc::c_double) -> libc::c_int {
-    return (__x != __x) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isnanl(mut __x: libc::c_double) -> libc::c_int {
-    return (__x != __x) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isnormalf(mut __x: libc::c_float)
- -> libc::c_int {
-    return (0 != __inline_isfinitef(__x) &&
-                __x.abs() >= 1.1754943508222876e-38f32) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isnormald(mut __x: libc::c_double)
- -> libc::c_int {
-    return (0 != __inline_isfinited(__x) &&
-                __x.abs() >= 2.2250738585072014e-308f64) as libc::c_int;
-}
-unsafe extern "C" fn __inline_isnormall(mut __x: libc::c_double)
- -> libc::c_int {
-    return (0 != __inline_isfinitel(__x) && __x.abs() >= 0.0f64) as
-               libc::c_int;
-}
-unsafe extern "C" fn __inline_signbitf(mut __x: libc::c_float)
- -> libc::c_int {
-    let mut __u: unnamed_2 = unnamed_2{__f: 0.,};
-    __u.__f = __x;
-    return (__u.__u >> 31i32) as libc::c_int;
-}
-unsafe extern "C" fn __inline_signbitd(mut __x: libc::c_double)
- -> libc::c_int {
-    let mut __u: unnamed = unnamed{__f: 0.,};
-    __u.__f = __x;
-    return (__u.__u >> 63i32) as libc::c_int;
-}
-unsafe extern "C" fn __inline_signbitl(mut __x: libc::c_double)
- -> libc::c_int {
-    let mut __u: unnamed_1 = unnamed_1{__ld: 0.,};
-    __u.__ld = __x;
-    return __u.__p.__sexp as libc::c_int >> 15i32;
-}
 
 pub unsafe extern "C" fn ec_range_bytes(mut _this: *mut ec_ctx_0) -> opus_uint32 {
     return (*_this).offs;
 }
-unsafe extern "C" fn ec_get_buffer(mut _this: *mut ec_ctx_0)
- -> *mut libc::c_uchar {
-    return (*_this).buf;
-}
+
 pub unsafe extern "C" fn ec_get_error(mut _this: *mut ec_ctx_0) -> libc::c_int {
     return (*_this).error;
 }
-unsafe extern "C" fn ec_tell(mut _this: *mut ec_ctx_0) -> libc::c_int {
-    return (*_this).nbits_total -
-               (::std::mem::size_of::<libc::c_uint>() as libc::c_ulong as
-                    libc::c_int * 8i32 - (*_this).rng.leading_zeros() as i32);
-}
+
 unsafe extern "C" fn celt_udiv(mut n: opus_uint32, mut d: opus_uint32)
  -> opus_uint32 {
     return n.wrapping_div(d);
-}
-unsafe extern "C" fn celt_sudiv(mut n: opus_int32, mut d: opus_int32)
- -> opus_int32 {
-    return n / d;
 }
 
 pub unsafe extern "C" fn ec_enc_init(mut _this: *mut ec_enc,
