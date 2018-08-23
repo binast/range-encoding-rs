@@ -8,24 +8,6 @@
 extern crate libc;
 extern "C" {
     pub type __sFILEX;
-
-    static mut suboptarg: *mut libc::c_char;
-    /* *
-   @file arch.h
-   @brief Various architecture definitions for CELT
-*/
-
-    fn __sincosf_stret(_: libc::c_float) -> __float2;
-
-    fn __sincos_stret(_: libc::c_double) -> __double2;
-
-    fn __sincospif_stret(_: libc::c_float) -> __float2;
-
-    fn __sincospi_stret(_: libc::c_double) -> __double2;
-
-    static mut signgam: libc::c_int;
-
-    static SMALL_DIV_TABLE: [opus_uint32; 129];
 }
 pub type int32_t = libc::c_int;
 pub type uint32_t = libc::c_uint;
@@ -206,34 +188,7 @@ unsafe extern "C" fn __inline_signbitl(mut __x: libc::c_double)
     __u.__ld = __x;
     return __u.__p.__sexp as libc::c_int >> 15i32;
 }
-unsafe extern "C" fn __sincosf(mut __x: libc::c_float,
-                               mut __sinp: *mut libc::c_float,
-                               mut __cosp: *mut libc::c_float) -> () {
-    let __stret: __float2 = __sincosf_stret(__x);
-    *__sinp = __stret.__sinval;
-    *__cosp = __stret.__cosval;
-}
-unsafe extern "C" fn __sincos(mut __x: libc::c_double,
-                              mut __sinp: *mut libc::c_double,
-                              mut __cosp: *mut libc::c_double) -> () {
-    let __stret: __double2 = __sincos_stret(__x);
-    *__sinp = __stret.__sinval;
-    *__cosp = __stret.__cosval;
-}
-unsafe extern "C" fn __sincospif(mut __x: libc::c_float,
-                                 mut __sinp: *mut libc::c_float,
-                                 mut __cosp: *mut libc::c_float) -> () {
-    let __stret: __float2 = __sincospif_stret(__x);
-    *__sinp = __stret.__sinval;
-    *__cosp = __stret.__cosval;
-}
-unsafe extern "C" fn __sincospi(mut __x: libc::c_double,
-                                mut __sinp: *mut libc::c_double,
-                                mut __cosp: *mut libc::c_double) -> () {
-    let __stret: __double2 = __sincospi_stret(__x);
-    *__sinp = __stret.__sinval;
-    *__cosp = __stret.__cosval;
-}
+
 pub unsafe extern "C" fn ec_range_bytes(mut _this: *mut ec_ctx_0) -> opus_uint32 {
     return (*_this).offs;
 }
