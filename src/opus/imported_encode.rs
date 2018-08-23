@@ -229,10 +229,8 @@ pub unsafe fn ec_enc_uint<W: Write>(mut _this: *mut ec_enc<W>,
 pub unsafe fn ec_enc_bits<W: Write>(mut _this: *mut ec_enc<W>,
                                      mut _fl: opus_uint32,
                                      mut _bits: libc::c_uint) -> Result<(), std::io::Error> {
-    let mut window: ec_window = 0;
-    let mut used: libc::c_int = 0;
-    window = (*_this).end_window;
-    used = (*_this).nend_bits;
+    let mut window = (*_this).end_window;
+    let mut used = (*_this).nend_bits;
     if !(_bits > 0i32 as libc::c_uint) {
         return celt_fatal((*::std::mem::transmute::<&[u8; 26],
                                              &mut [libc::c_char; 26]>(b"assertion failed: _bits>0\x00")).as_mut_ptr(),
