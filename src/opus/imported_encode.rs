@@ -131,8 +131,7 @@ pub unsafe fn ec_encode_bin<W: Write>(mut _this: *mut ec_enc<W>,
                                        mut _fl: libc::c_uint,
                                        mut _fh: libc::c_uint,
                                        mut _bits: libc::c_uint) -> Result<(), std::io::Error> {
-    let mut r: opus_uint32 = 0;
-    r = (*_this).rng >> _bits;
+    let mut r = (*_this).rng >> _bits;
     if _fl > 0i32 as libc::c_uint {
         (*_this).val =
             ((*_this).val as
