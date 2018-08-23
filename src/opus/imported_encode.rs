@@ -172,8 +172,7 @@ pub unsafe fn ec_enc_icdf<W: Write>(mut _this: *mut ec_enc<W>,
                                      mut _s: libc::c_int,
                                      mut _icdf: *const libc::c_uchar,
                                      mut _ftb: libc::c_uint) -> Result<(), std::io::Error> {
-    let mut r: opus_uint32 = 0;
-    r = (*_this).rng >> _ftb;
+    let mut r = (*_this).rng >> _ftb;
     if _s > 0i32 {
         (*_this).val =
             ((*_this).val as
