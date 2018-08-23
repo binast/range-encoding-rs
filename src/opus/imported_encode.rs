@@ -94,14 +94,12 @@ unsafe fn ec_enc_carry_out<W: Write>(mut _this: *mut ec_enc<W>,
                                       mut _c: libc::c_int) -> Result<(), std::io::Error> {
     if _c as libc::c_uint != (1u32 << 8i32).wrapping_sub(1i32 as libc::c_uint)
        {
-        let mut carry: libc::c_int = 0;
-        carry = _c >> 8i32;
+        let mut carry = _c >> 8i32;
         if (*_this).rem >= 0i32 {
             ec_write_byte(_this, ((*_this).rem + carry) as libc::c_uint)?;
         }
         if (*_this).ext > 0i32 as libc::c_uint {
-            let mut sym: libc::c_uint = 0;
-            sym =
+            let mut sym =
                 (1u32 <<
                      8i32).wrapping_sub(1i32 as
                                             libc::c_uint).wrapping_add(carry
