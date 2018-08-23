@@ -37,6 +37,20 @@ impl Reader {
         Ok(index as u32)
     }
 
+/*
+// FIXME: I actually don't understand `bits()` well enough
+// to publish it.    /// Encode a sequence of raw bits, without any frequency information.
+    pub fn bits(&mut self, size: usize) -> Result<u16, std::io::Error> {
+        let result = unsafe {
+            let result = imported_decode::ec_dec_bits(&mut self.state,
+                size as u32);
+            self.check_status()?;
+            result as u16
+        };
+        Ok(result)
+    }
+*/
+
     pub fn done(self) {
         // FIXME: Nothing to do?
     }

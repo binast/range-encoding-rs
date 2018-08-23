@@ -4,48 +4,45 @@
          non_snake_case,
          non_upper_case_globals,
          unused_mut)]
-#![feature(extern_types, libc)]
+
 extern crate libc;
 extern "C" {
     pub type __sFILEX;
-    #[no_mangle]
+
     static mut __stdinp: *mut FILE;
-    #[no_mangle]
+
     static mut __stdoutp: *mut FILE;
-    #[no_mangle]
+
     static mut __stderrp: *mut FILE;
-    #[no_mangle]
+
     fn __swbuf(_: libc::c_int, _: *mut FILE) -> libc::c_int;
-    #[no_mangle]
+
     static sys_nerr: libc::c_int;
-    #[no_mangle]
+
     static sys_errlist: [*const libc::c_char; 0];
-    #[no_mangle]
+
     static mut __mb_cur_max: libc::c_int;
-    #[no_mangle]
+
     fn free(_: *mut libc::c_void) -> ();
-    #[no_mangle]
+
     fn malloc(_: libc::c_ulong) -> *mut libc::c_void;
-    #[no_mangle]
+
     static mut suboptarg: *mut libc::c_char;
     /* *
    @file arch.h
    @brief Various architecture definitions for CELT
 */
-    #[no_mangle]
-    fn celt_fatal(str: *const libc::c_char, file: *const libc::c_char,
-                  line: libc::c_int) -> !;
-    #[no_mangle]
+
     fn __sincosf_stret(_: libc::c_float) -> __float2;
-    #[no_mangle]
+
     fn __sincos_stret(_: libc::c_double) -> __double2;
-    #[no_mangle]
+
     fn __sincospif_stret(_: libc::c_float) -> __float2;
-    #[no_mangle]
+
     fn __sincospi_stret(_: libc::c_double) -> __double2;
-    #[no_mangle]
+
     static mut signgam: libc::c_int;
-    #[no_mangle]
+
     static SMALL_DIV_TABLE: [opus_uint32; 129];
 }
 pub type int32_t = libc::c_int;
@@ -301,7 +298,7 @@ unsafe extern "C" fn celt_sudiv(mut n: opus_int32, mut d: opus_int32)
  -> opus_int32 {
     return n / d;
 }
-#[no_mangle]
+
 pub unsafe extern "C" fn ec_enc_init(mut _this: *mut ec_enc,
                                      mut _buf: *mut libc::c_uchar,
                                      mut _size: opus_uint32) -> () {
@@ -318,7 +315,7 @@ pub unsafe extern "C" fn ec_enc_init(mut _this: *mut ec_enc,
     (*_this).storage = _size;
     (*_this).error = 0i32;
 }
-#[no_mangle]
+
 pub unsafe extern "C" fn ec_encode(mut _this: *mut ec_enc,
                                    mut _fl: libc::c_uint,
                                    mut _fh: libc::c_uint,
@@ -385,11 +382,6 @@ unsafe extern "C" fn ec_enc_carry_out(mut _this: *mut ec_enc,
 unsafe extern "C" fn ec_write_byte(mut _this: *mut ec_enc,
                                    mut _value: libc::c_uint) -> libc::c_int {
     if (*_this).offs.wrapping_add((*_this).end_offs) >= (*_this).storage {
-        panic!("ec_write_byte: too far {offset} + {end_offset} = {total} >= {storage} ",
-            offset = (*_this).offs,
-            end_offset = (*_this).end_offs,
-            total = (*_this).offs + (*_this).end_offs,
-            storage = (*_this).storage);
         return -1i32
     } else {
         let fresh1 = (*_this).offs;
@@ -398,7 +390,7 @@ unsafe extern "C" fn ec_write_byte(mut _this: *mut ec_enc,
         return 0i32
     };
 }
-#[no_mangle]
+
 pub unsafe extern "C" fn ec_encode_bin(mut _this: *mut ec_enc,
                                        mut _fl: libc::c_uint,
                                        mut _fh: libc::c_uint,
@@ -422,7 +414,7 @@ pub unsafe extern "C" fn ec_encode_bin(mut _this: *mut ec_enc,
     }
     ec_enc_normalize(_this);
 }
-#[no_mangle]
+
 pub unsafe extern "C" fn ec_enc_bit_logp(mut _this: *mut ec_enc,
                                          mut _val: libc::c_int,
                                          mut _logp: libc::c_uint) -> () {
@@ -437,7 +429,7 @@ pub unsafe extern "C" fn ec_enc_bit_logp(mut _this: *mut ec_enc,
     (*_this).rng = if 0 != _val { s } else { r };
     ec_enc_normalize(_this);
 }
-#[no_mangle]
+
 pub unsafe extern "C" fn ec_enc_icdf(mut _this: *mut ec_enc,
                                      mut _s: libc::c_int,
                                      mut _icdf: *const libc::c_uchar,
@@ -470,7 +462,7 @@ pub unsafe extern "C" fn ec_enc_icdf(mut _this: *mut ec_enc,
     }
     ec_enc_normalize(_this);
 }
-#[no_mangle]
+
 pub unsafe extern "C" fn ec_enc_uint(mut _this: *mut ec_enc,
                                      mut _fl: opus_uint32,
                                      mut _ft: opus_uint32) -> () {
@@ -478,7 +470,7 @@ pub unsafe extern "C" fn ec_enc_uint(mut _this: *mut ec_enc,
     let mut fl: libc::c_uint = 0;
     let mut ftb: libc::c_int = 0;
     if !(_ft > 1i32 as libc::c_uint) {
-        celt_fatal((*::std::mem::transmute::<&[u8; 24],
+        return celt_fatal ((*::std::mem::transmute::<&[u8; 24],
                                              &mut [libc::c_char; 24]>(b"assertion failed: _ft>1\x00")).as_mut_ptr(),
                    (*::std::mem::transmute::<&[u8; 14],
                                              &mut [libc::c_char; 14]>(b"celt/entenc.c\x00")).as_mut_ptr(),
@@ -504,7 +496,7 @@ pub unsafe extern "C" fn ec_enc_uint(mut _this: *mut ec_enc,
         return;
     };
 }
-#[no_mangle]
+
 pub unsafe extern "C" fn ec_enc_bits(mut _this: *mut ec_enc,
                                      mut _fl: opus_uint32,
                                      mut _bits: libc::c_uint) -> () {
@@ -513,7 +505,7 @@ pub unsafe extern "C" fn ec_enc_bits(mut _this: *mut ec_enc,
     window = (*_this).end_window;
     used = (*_this).nend_bits;
     if !(_bits > 0i32 as libc::c_uint) {
-        celt_fatal((*::std::mem::transmute::<&[u8; 26],
+        return celt_fatal((*::std::mem::transmute::<&[u8; 26],
                                              &mut [libc::c_char; 26]>(b"assertion failed: _bits>0\x00")).as_mut_ptr(),
                    (*::std::mem::transmute::<&[u8; 14],
                                              &mut [libc::c_char; 14]>(b"celt/entenc.c\x00")).as_mut_ptr(),
@@ -558,7 +550,7 @@ unsafe extern "C" fn ec_write_byte_at_end(mut _this: *mut ec_enc,
         return 0i32
     };
 }
-#[no_mangle]
+
 pub unsafe extern "C" fn ec_enc_patch_initial_bits(mut _this: *mut ec_enc,
                                                    mut _val: libc::c_uint,
                                                    mut _nbits: libc::c_uint)
@@ -566,7 +558,7 @@ pub unsafe extern "C" fn ec_enc_patch_initial_bits(mut _this: *mut ec_enc,
     let mut shift: libc::c_int = 0;
     let mut mask: libc::c_uint = 0;
     if !(_nbits <= 8i32 as libc::c_uint) {
-        celt_fatal((*::std::mem::transmute::<&[u8; 38],
+        return celt_fatal((*::std::mem::transmute::<&[u8; 38],
                                              &mut [libc::c_char; 38]>(b"assertion failed: _nbits<=EC_SYM_BITS\x00")).as_mut_ptr(),
                    (*::std::mem::transmute::<&[u8; 14],
                                              &mut [libc::c_char; 14]>(b"celt/entenc.c\x00")).as_mut_ptr(),
@@ -591,7 +583,7 @@ pub unsafe extern "C" fn ec_enc_patch_initial_bits(mut _this: *mut ec_enc,
     };
 }
 
-#[no_mangle]
+
 pub unsafe extern "C" fn ec_enc_done(mut _this: *mut ec_enc) -> () {
     let mut window: ec_window = 0;
     let mut used: libc::c_int = 0;
@@ -655,4 +647,10 @@ pub unsafe extern "C" fn ec_enc_done(mut _this: *mut ec_enc) -> () {
             };
         };
     };
+}
+
+fn celt_fatal(str: *const libc::c_char, file: *const libc::c_char,
+                line: libc::c_int)
+{
+    panic!("celt_fatal")
 }

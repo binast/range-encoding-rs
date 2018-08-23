@@ -1,5 +1,5 @@
 
-use ::CumulativeDistributionFrequency;
+use ::{ CumulativeDistributionFrequency };
 
 use opus::imported_encode;
 
@@ -38,6 +38,20 @@ impl Writer {
         };
         Ok(())
     }
+
+/*
+// FIXME: I actually don't understand `bits()` well enough
+// to publish it.    /// Encode a sequence of raw bits, without any frequency information.
+    pub fn bits(&mut self, bits: u16, size: usize) -> Result<(), std::io::Error> {
+        unsafe {
+            imported_encode::ec_enc_bits(&mut self.state,
+                bits as u32,
+                size as u32);
+            self.check_status()?;
+        }
+        Ok(())
+    }
+*/
 
     pub fn done(mut self) -> Vec<u8> {
         debug_assert_eq!(self.finalized, false);

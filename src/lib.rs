@@ -20,6 +20,7 @@ pub mod opus {
     pub type Reader = decode::Reader;
 }
 
+
 #[derive(Clone, Copy)]
 pub struct Segment {
     /// First value part of the segment.
