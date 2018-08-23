@@ -5,26 +5,25 @@ use opus::imported_encode;
 
 use std;
 
-pub struct Writer {
-    finalized: bool,
-    // Note: Length is **invalid** until we call `done()`.
-    destination: Vec<u8>,
-    state: imported_encode::ec_enc,
+pub struct Writer<W> where W: std::io::Write {
+    state: imported_encode::ec_enc<W>,
 }
 
-impl Writer {
-    // FIXME: The destination should really be a `std::io::Write`.
-    pub fn with_capacity(capacity: usize) -> Self {
-        let mut destination = Vec::with_capacity(capacity);
-        let state = unsafe {
-            let mut state : imported_encode::ec_enc = std::mem::uninitialized();
-            imported_encode::ec_enc_init(&mut state, destination.as_mut_ptr(), capacity as u32);
-            state
-        };
-        Writer {
-            destination,
-            state,
-            finalized: false,
+impl<W> Writer<W> where W: std::io::Write {
+    pub fn new(out: W) -> Self {
+        Self {
+            state: imported_encode::ec_enc {
+                out,
+                end_window: 0,
+                nend_bits: 0,
+                nbits_total: 33,
+                offs: 0,
+                rng: std::i32::MAX as u32 + 1,
+                rem: -1,
+                val: 0,
+                ext: 0,
+                end_buffer: vec![],
+            }
         }
     }
 
@@ -33,8 +32,7 @@ impl Writer {
         let segment = icdf.at_index(index)
           .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid symbol"))?;
         unsafe {
-            imported_encode::ec_encode(&mut self.state, segment.low, segment.next, icdf.width())
-                .map_err(|_| std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "symbol(): Too much data"))?;
+            imported_encode::ec_encode(&mut self.state, segment.low, segment.next, icdf.width())?;
         };
         Ok(())
     }
@@ -53,34 +51,10 @@ impl Writer {
     }
 */
 
-    pub fn done(mut self) -> Result<Vec<u8>, std::io::Error> {
-        let length = self.finalize()?;
-        let mut bytes : Vec<u8> = vec![];
-        std::mem::swap(&mut bytes, &mut self.destination);
+    pub fn done(mut self) -> Result<W, std::io::Error> {
         unsafe {
-            bytes.set_len(length as usize);
-        }
-        Ok(bytes)
-    }
-
-    fn finalize(&mut self) -> Result<usize, std::io::Error> {
-        debug_assert_eq!(self.finalized, false);
-        self.finalized = true;
-        let length = unsafe {
-            imported_encode::ec_enc_done(&mut self.state)
-                .map_err(|_| std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "done(): Too much data"))?;
-            imported_encode::ec_range_bytes(&mut self.state)
+            imported_encode::ec_enc_done(&mut self.state)?;
         };
-        Ok(length as usize)
-    }
-}
-
-impl Drop for Writer {
-    fn drop(&mut self) {
-        if self.finalized {
-            return
-        }
-        self.finalize()
-            .expect("Could not drop writer");
+        Ok(self.state.out)
     }
 }

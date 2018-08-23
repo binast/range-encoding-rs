@@ -5,6 +5,9 @@
          non_upper_case_globals,
          unused_mut)]
 
+use std;
+use std::io::Write;
+
 extern crate libc;
 
 pub type int32_t = libc::c_int;
@@ -18,12 +21,9 @@ pub type __darwin_off_t = __int64_t;
 pub type opus_int32 = int32_t;
 pub type opus_uint32 = uint32_t;
 pub type size_t = __darwin_size_t;
-#[derive ( Clone, Debug )]
-#[repr(C)]
-pub struct ec_ctx {
-    pub buf: *mut libc::c_uchar,
-    pub storage: opus_uint32,
-    pub end_offs: opus_uint32,
+
+pub struct ec_enc<W> where W: std::io::Write {
+    pub out: W,
     pub end_window: ec_window,
     pub nend_bits: libc::c_int,
     pub nbits_total: libc::c_int,
@@ -32,6 +32,9 @@ pub struct ec_ctx {
     pub val: opus_uint32,
     pub ext: opus_uint32,
     pub rem: libc::c_int,
+
+    /// Bytes written at the end, in backwards order.
+    pub end_buffer: Vec<u8>,
 }
 #[derive ( Copy , Clone )]
 #[repr ( C )]
@@ -39,7 +42,7 @@ pub union unnamed {
     __f: libc::c_double,
     __u: libc::c_ulonglong,
 }
-pub type ec_enc = ec_ctx;
+
 #[derive ( Copy , Clone )]
 #[repr(C)]
 pub struct unnamed_0 {
@@ -48,46 +51,15 @@ pub struct unnamed_0 {
 }
 pub type ec_window = opus_uint32;
 pub type fpos_t = __darwin_off_t;
-#[derive ( Copy , Clone )]
-#[repr(C)]
-pub struct __sbuf {
-    pub _base: *mut libc::c_uchar,
-    pub _size: libc::c_int,
-}
 
-pub type ec_ctx_0 = ec_ctx;
-
-
-pub unsafe extern "C" fn ec_range_bytes(mut _this: *mut ec_ctx_0) -> opus_uint32 {
-    return (*_this).offs;
-}
-
-
-unsafe extern "C" fn celt_udiv(mut n: opus_uint32, mut d: opus_uint32)
- -> opus_uint32 {
+fn celt_udiv(mut n: opus_uint32, mut d: opus_uint32) -> opus_uint32 {
     return n.wrapping_div(d);
 }
 
-pub unsafe extern "C" fn ec_enc_init(mut _this: *mut ec_enc,
-                                     mut _buf: *mut libc::c_uchar,
-                                     mut _size: opus_uint32) -> () {
-    (*_this).buf = _buf;
-    (*_this).end_offs = 0i32 as opus_uint32;
-    (*_this).end_window = 0i32 as ec_window;
-    (*_this).nend_bits = 0i32;
-    (*_this).nbits_total = 32i32 + 1i32;
-    (*_this).offs = 0i32 as opus_uint32;
-    (*_this).rng = 1u32 << 32i32 - 1i32;
-    (*_this).rem = -1i32;
-    (*_this).val = 0i32 as opus_uint32;
-    (*_this).ext = 0i32 as opus_uint32;
-    (*_this).storage = _size;
-}
-
-pub unsafe extern "C" fn ec_encode(mut _this: *mut ec_enc,
+pub unsafe fn ec_encode<W: Write>(mut _this: *mut ec_enc<W>,
                                    mut _fl: libc::c_uint,
                                    mut _fh: libc::c_uint,
-                                   mut _ft: libc::c_uint) -> Result<(), i32> {
+                                   mut _ft: libc::c_uint) -> Result<(), std::io::Error> {
     let mut r: opus_uint32 = 0;
     r = celt_udiv((*_this).rng, _ft);
     if _fl > 0i32 as libc::c_uint {
@@ -105,7 +77,7 @@ pub unsafe extern "C" fn ec_encode(mut _this: *mut ec_enc,
     ec_enc_normalize(_this)?;
     Ok(())
 }
-unsafe extern "C" fn ec_enc_normalize(mut _this: *mut ec_enc) -> Result<(), i32> {
+unsafe fn ec_enc_normalize<W: Write>(mut _this: *mut ec_enc<W>) -> Result<(), std::io::Error> {
     while (*_this).rng <= 1u32 << 32i32 - 1i32 >> 8i32 {
         ec_enc_carry_out(_this,
                          ((*_this).val >> 32i32 - 8i32 - 1i32) as
@@ -118,8 +90,8 @@ unsafe extern "C" fn ec_enc_normalize(mut _this: *mut ec_enc) -> Result<(), i32>
     };
     Ok(())
 }
-unsafe extern "C" fn ec_enc_carry_out(mut _this: *mut ec_enc,
-                                      mut _c: libc::c_int) -> Result<(), i32> {
+unsafe fn ec_enc_carry_out<W: Write>(mut _this: *mut ec_enc<W>,
+                                      mut _c: libc::c_int) -> Result<(), std::io::Error> {
     if _c as libc::c_uint != (1u32 << 8i32).wrapping_sub(1i32 as libc::c_uint)
        {
         let mut carry: libc::c_int = 0;
@@ -149,22 +121,16 @@ unsafe extern "C" fn ec_enc_carry_out(mut _this: *mut ec_enc,
     } else { (*_this).ext = (*_this).ext.wrapping_add(1) };
     Ok(())
 }
-unsafe extern "C" fn ec_write_byte(mut _this: *mut ec_enc,
-                                   mut _value: libc::c_uint) -> Result<(), i32> {
-    if (*_this).offs.wrapping_add((*_this).end_offs) >= (*_this).storage {
-        return Err(-1i32)
-    } else {
-        let fresh1 = (*_this).offs;
-        (*_this).offs = (*_this).offs.wrapping_add(1);
-        *(*_this).buf.offset(fresh1 as isize) = _value as libc::c_uchar;
-        return Ok(())
-    };
+unsafe fn ec_write_byte<W: Write>(mut _this: *mut ec_enc<W>,
+                           mut _value: libc::c_uint) -> Result<(), std::io::Error> {
+    (*_this).out.write_all(&[_value as u8])?;
+    Ok(())
 }
 
-pub unsafe extern "C" fn ec_encode_bin(mut _this: *mut ec_enc,
+pub unsafe fn ec_encode_bin<W: Write>(mut _this: *mut ec_enc<W>,
                                        mut _fl: libc::c_uint,
                                        mut _fh: libc::c_uint,
-                                       mut _bits: libc::c_uint) -> Result<(), i32> {
+                                       mut _bits: libc::c_uint) -> Result<(), std::io::Error> {
     let mut r: opus_uint32 = 0;
     r = (*_this).rng >> _bits;
     if _fl > 0i32 as libc::c_uint {
@@ -186,9 +152,9 @@ pub unsafe extern "C" fn ec_encode_bin(mut _this: *mut ec_enc,
     Ok(())
 }
 
-pub unsafe extern "C" fn ec_enc_bit_logp(mut _this: *mut ec_enc,
+pub unsafe fn ec_enc_bit_logp<W: Write>(mut _this: *mut ec_enc<W>,
                                          mut _val: libc::c_int,
-                                         mut _logp: libc::c_uint) -> Result<(), i32> {
+                                         mut _logp: libc::c_uint) -> Result<(), std::io::Error> {
     let mut r: opus_uint32 = 0;
     let mut s: opus_uint32 = 0;
     let mut l: opus_uint32 = 0;
@@ -202,10 +168,10 @@ pub unsafe extern "C" fn ec_enc_bit_logp(mut _this: *mut ec_enc,
     Ok(())
 }
 
-pub unsafe extern "C" fn ec_enc_icdf(mut _this: *mut ec_enc,
+pub unsafe fn ec_enc_icdf<W: Write>(mut _this: *mut ec_enc<W>,
                                      mut _s: libc::c_int,
                                      mut _icdf: *const libc::c_uchar,
-                                     mut _ftb: libc::c_uint) -> Result<(), i32> {
+                                     mut _ftb: libc::c_uint) -> Result<(), std::io::Error> {
     let mut r: opus_uint32 = 0;
     r = (*_this).rng >> _ftb;
     if _s > 0i32 {
@@ -236,9 +202,9 @@ pub unsafe extern "C" fn ec_enc_icdf(mut _this: *mut ec_enc,
     Ok(())
 }
 
-pub unsafe extern "C" fn ec_enc_uint(mut _this: *mut ec_enc,
+pub unsafe fn ec_enc_uint<W: Write>(mut _this: *mut ec_enc<W>,
                                      mut _fl: opus_uint32,
-                                     mut _ft: opus_uint32) -> Result<(), i32> {
+                                     mut _ft: opus_uint32) -> Result<(), std::io::Error> {
     let mut ft: libc::c_uint = 0;
     let mut fl: libc::c_uint = 0;
     let mut ftb: libc::c_int = 0;
@@ -270,9 +236,9 @@ pub unsafe extern "C" fn ec_enc_uint(mut _this: *mut ec_enc,
     };
 }
 
-pub unsafe extern "C" fn ec_enc_bits(mut _this: *mut ec_enc,
+pub unsafe fn ec_enc_bits<W: Write>(mut _this: *mut ec_enc<W>,
                                      mut _fl: opus_uint32,
-                                     mut _bits: libc::c_uint) -> Result<(), i32> {
+                                     mut _bits: libc::c_uint) -> Result<(), std::io::Error> {
     let mut window: ec_window = 0;
     let mut used: libc::c_int = 0;
     window = (*_this).end_window;
@@ -310,55 +276,14 @@ pub unsafe extern "C" fn ec_enc_bits(mut _this: *mut ec_enc,
         return Ok(());
     };
 }
-unsafe extern "C" fn ec_write_byte_at_end(mut _this: *mut ec_enc,
+unsafe fn ec_write_byte_at_end<W: Write>(mut _this: *mut ec_enc<W>,
                                           mut _value: libc::c_uint)
- -> Result<(), i32> {
-    if (*_this).offs.wrapping_add((*_this).end_offs) >= (*_this).storage {
-        return Err(-1i32)
-    } else {
-        (*_this).end_offs = (*_this).end_offs.wrapping_add(1);
-        *(*_this).buf.offset((*_this).storage.wrapping_sub((*_this).end_offs)
-                                 as isize) = _value as libc::c_uchar;
-        return Ok(())
-    };
+ -> Result<(), std::io::Error> {
+     (*_this).end_buffer.push(_value as u8);
+     Ok(())
 }
 
-pub unsafe extern "C" fn ec_enc_patch_initial_bits(mut _this: *mut ec_enc,
-                                                   mut _val: libc::c_uint,
-                                                   mut _nbits: libc::c_uint)
- -> Result<(), i32> {
-    let mut shift: libc::c_int = 0;
-    let mut mask: libc::c_uint = 0;
-    if !(_nbits <= 8i32 as libc::c_uint) {
-        return celt_fatal((*::std::mem::transmute::<&[u8; 38],
-                                             &mut [libc::c_char; 38]>(b"assertion failed: _nbits<=EC_SYM_BITS\x00")).as_mut_ptr(),
-                   (*::std::mem::transmute::<&[u8; 14],
-                                             &mut [libc::c_char; 14]>(b"celt/entenc.c\x00")).as_mut_ptr(),
-                   217i32);
-    } else {
-        shift = (8i32 as libc::c_uint).wrapping_sub(_nbits) as libc::c_int;
-        mask = ((1i32 << _nbits) - 1i32 << shift) as libc::c_uint;
-        if (*_this).offs > 0i32 as libc::c_uint {
-            *(*_this).buf.offset(0isize) =
-                (*(*_this).buf.offset(0isize) as libc::c_uint & !mask |
-                     _val << shift) as libc::c_uchar
-        } else if (*_this).rem >= 0i32 {
-            (*_this).rem =
-                ((*_this).rem as libc::c_uint & !mask | _val << shift) as
-                    libc::c_int
-        } else if (*_this).rng <= 1u32 << 32i32 - 1i32 >> _nbits {
-            (*_this).val =
-                (*_this).val & !(mask << 32i32 - 8i32 - 1i32) |
-                    _val << 32i32 - 8i32 - 1i32 + shift
-        } else {
-            return Err(-1i32);
-        }
-        return Ok(());
-    };
-}
-
-
-pub unsafe extern "C" fn ec_enc_done(mut _this: *mut ec_enc) -> Result<(), i32> {
+pub unsafe fn ec_enc_done<W: Write>(mut _this: *mut ec_enc<W>) -> Result<(), std::io::Error> {
     let mut window: ec_window = 0;
     let mut used: libc::c_int = 0;
     let mut msk: opus_uint32 = 0;
@@ -398,31 +323,18 @@ pub unsafe extern "C" fn ec_enc_done(mut _this: *mut ec_enc) -> Result<(), i32> 
     }
 
     if used > 0i32 {
-        if (*_this).end_offs >= (*_this).storage {
-            return Err(-1i32);
-        } else {
-            l = -l;
-            if (*_this).offs.wrapping_add((*_this).end_offs) >=
-                    (*_this).storage && l < used {
-                window &= ((1i32 << l) - 1i32) as libc::c_uint;
-                return Err(-1i32);
-            };
-            let ref mut fresh2 =
-                *(*_this).buf.offset((*_this).storage.wrapping_sub((*_this).end_offs).wrapping_sub(1i32
-                                                                                                        as
-                                                                                                        libc::c_uint)
-                                            as isize);
-            *fresh2 =
-                (*fresh2 as libc::c_int |
-                        window as libc::c_uchar as libc::c_int) as
-                    libc::c_uchar;
-        };
+        *(*_this).end_buffer.last_mut()
+            .unwrap() |= window as u8;
     };
+
+    for byte in (*_this).end_buffer.iter().rev() {
+        ec_write_byte(_this, *byte as u32)?;
+    }
     Ok(())
 }
 
 fn celt_fatal(_str: *const libc::c_char, _file: *const libc::c_char,
-                line: libc::c_int) -> Result<(), i32>
+                line: libc::c_int) -> Result<(), std::io::Error>
 {
     panic!("celt_fatal at line {}", line)
 }

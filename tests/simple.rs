@@ -13,7 +13,7 @@ fn probabilities_roundtrip() {
     let test_with_sample = |sample: &str| {
         eprintln!("Writing...");
 
-        let mut writer = opus::Writer::with_capacity(128);
+        let mut writer = opus::Writer::new(vec![]);
         for c in sample.chars() {
             let index = symbols.iter()
                 .cloned()

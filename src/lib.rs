@@ -16,8 +16,8 @@ pub mod opus {
     mod encode;
     mod decode;
 
-    pub type Writer = encode::Writer;
-    pub type Reader = decode::Reader;
+    pub use self::encode::Writer;
+    pub use self::decode::Reader;
 }
 
 
