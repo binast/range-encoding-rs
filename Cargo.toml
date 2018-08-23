@@ -6,3 +6,8 @@ description = "An implementation of range encoding (entropy coding), extracted f
 
 [dependencies]
 libc = "*"
+log = "*"
+
+[dev-dependencies]
+env_logger = "*"
+rand = "0.5.5"

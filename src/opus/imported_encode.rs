@@ -59,7 +59,7 @@ pub type __darwin_off_t = __int64_t;
 pub type opus_int32 = int32_t;
 pub type opus_uint32 = uint32_t;
 pub type size_t = __darwin_size_t;
-#[derive ( Copy , Clone )]
+#[derive ( Clone, Debug )]
 #[repr(C)]
 pub struct ec_ctx {
     pub buf: *mut libc::c_uchar,
@@ -278,7 +278,7 @@ unsafe extern "C" fn __sincospi(mut __x: libc::c_double,
     *__sinp = __stret.__sinval;
     *__cosp = __stret.__cosval;
 }
-unsafe extern "C" fn ec_range_bytes(mut _this: *mut ec_ctx_0) -> opus_uint32 {
+pub unsafe extern "C" fn ec_range_bytes(mut _this: *mut ec_ctx_0) -> opus_uint32 {
     return (*_this).offs;
 }
 unsafe extern "C" fn ec_get_buffer(mut _this: *mut ec_ctx_0)
@@ -385,6 +385,11 @@ unsafe extern "C" fn ec_enc_carry_out(mut _this: *mut ec_enc,
 unsafe extern "C" fn ec_write_byte(mut _this: *mut ec_enc,
                                    mut _value: libc::c_uint) -> libc::c_int {
     if (*_this).offs.wrapping_add((*_this).end_offs) >= (*_this).storage {
+        panic!("ec_write_byte: too far {offset} + {end_offset} = {total} >= {storage} ",
+            offset = (*_this).offs,
+            end_offset = (*_this).end_offs,
+            total = (*_this).offs + (*_this).end_offs,
+            storage = (*_this).storage);
         return -1i32
     } else {
         let fresh1 = (*_this).offs;
