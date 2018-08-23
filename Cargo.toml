@@ -3,3 +3,6 @@ name = "range-encoding"
 version = "0.1.0"
 authors = ["David Teller <D.O.Teller@gmail.com>"]
 description = "An implementation of range encoding (entropy coding), extracted from Opus."
+
+[dependencies]
+libc = "*"

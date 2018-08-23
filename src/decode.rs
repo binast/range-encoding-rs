@@ -28,11 +28,11 @@ impl Reader {
         let index = unsafe {
             let frequency = opus_decode::ec_decode(&mut self.state, icdf.width());
             self.check_status()?;
-            let (index, segment) = icdf.find(frequency)
+            let indexed= icdf.find(frequency)
                 .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid probability"))?;
-            opus_decode::ec_dec_update(&mut self.state, segment.low, segment.next, icdf.width());
+            opus_decode::ec_dec_update(&mut self.state, indexed.segment.low, indexed.segment.next, icdf.width());
             self.check_status()?;
-            index
+            indexed.index
         };
         Ok(index as u32)
     }

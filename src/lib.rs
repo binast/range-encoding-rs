@@ -1,8 +1,7 @@
-// Used for opus_decode.
+// Used for opus_{encode, decode}.
 #![feature(extern_types)]
 
-extern crate bitstream_io;
-extern crate num_traits;
+extern crate libc;
 
 pub mod encode;
 pub mod decode;
@@ -20,35 +19,55 @@ pub struct Segment {
     pub next: u32,
 }
 
+pub struct IndexedSegment {
+    pub segment: Segment,
+    pub index: usize,
+}
+
 pub struct CumulativeDistributionFrequency {
     /// Ordered, non-empty, contiguous list of segments, starting at 0.
-    segments: Box<[Segment]>,
+    segments: Box<[IndexedSegment]>,
 
     /// The width, which is exactly `segments.last.width`.
     width: u32,
 }
 impl CumulativeDistributionFrequency {
     // FIXME: Better errors
-    pub fn new(mut segments: Vec<Segment>) -> Result<Self, ()> {
+    pub fn new(segments: Vec<Segment>) -> Result<Self, ()> {
         if segments.len() == 0 {
             return Err(())
         }
         if segments[0].low != 0 {
             return Err(())
         }
+
+        // Stick an original index on segments,
+        // as we're going to sort them.
+        let mut segments : Vec<_> = segments.into_iter()
+            .enumerate()
+            .map(|(index, segment)| {
+                IndexedSegment {
+                    segment,
+                    index
+                }
+            })
+            .collect();
+
         segments.sort_by(|a, b| {
-            u32::cmp(&a.low, &b.low)
+            u32::cmp(&a.segment.low, &b.segment.low)
         });
         for i in 0 .. segments.len() - 1 {
-            if segments[i].next != segments[i + 1].low {
+            if segments[i].segment.next != segments[i + 1].segment.low {
                 return Err(())
             }
         }
         let width = segments.last()
             .unwrap() // Checked when entering function.
+            .segment
             .next;
         Ok(Self {
-            segments: segments.into_boxed_slice(),
+            segments: segments
+                .into_boxed_slice(),
             width
         })
     }
@@ -59,26 +78,26 @@ impl CumulativeDistributionFrequency {
     }
 
     /// Find a value from its frequency.
-    pub fn find(&self, probability: u32) -> Option<(usize, Segment)> {
+    pub fn find(&self, probability: u32) -> Option<&IndexedSegment> {
         if probability >= self.width {
             return None
         }
         let index = self.segments.binary_search_by(|segment| {
             use std::cmp::Ordering;
-            if segment.low > probability {
+            if segment.segment.low > probability {
                 return Ordering::Greater
             }
-            if segment.next <= probability {
+            if segment.segment.next <= probability {
                 return Ordering::Less
             }
             Ordering::Equal
         }).ok()?;
-        Some((index, self.segments[index]))
+        Some(&self.segments[index])
     }
 
     /// Find a value from its index
     pub fn at_index(&self, index: usize) -> Option<Segment> {
         self.segments.get(index)
-            .map(Segment::clone)
+            .map(|indexed| indexed.segment.clone())
     }
 }
