@@ -18,7 +18,7 @@ impl<W> Writer<W> where W: std::io::Write {
                 nend_bits: 0,
                 nbits_total: 33,
                 offs: 0,
-                rng: std::i32::MAX as u32 + 1,
+                rng: std::u32::MAX / 2 + 1,
                 rem: -1,
                 val: 0,
                 ext: 0,
