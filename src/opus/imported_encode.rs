@@ -60,8 +60,7 @@ pub unsafe fn ec_encode<W: Write>(mut _this: *mut ec_enc<W>,
                                    mut _fl: libc::c_uint,
                                    mut _fh: libc::c_uint,
                                    mut _ft: libc::c_uint) -> Result<(), std::io::Error> {
-    let mut r: opus_uint32 = 0;
-    r = celt_udiv((*_this).rng, _ft);
+    let mut r = celt_udiv((*_this).rng, _ft);
     if _fl > 0i32 as libc::c_uint {
         (*_this).val =
             ((*_this).val as
