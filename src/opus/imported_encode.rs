@@ -9,24 +9,6 @@ extern crate libc;
 extern "C" {
     pub type __sFILEX;
 
-    static mut __stdinp: *mut FILE;
-
-    static mut __stdoutp: *mut FILE;
-
-    static mut __stderrp: *mut FILE;
-
-    fn __swbuf(_: libc::c_int, _: *mut FILE) -> libc::c_int;
-
-    static sys_nerr: libc::c_int;
-
-    static sys_errlist: [*const libc::c_char; 0];
-
-    static mut __mb_cur_max: libc::c_int;
-
-    fn free(_: *mut libc::c_void) -> ();
-
-    fn malloc(_: libc::c_ulong) -> *mut libc::c_void;
-
     static mut suboptarg: *mut libc::c_char;
     /* *
    @file arch.h
@@ -149,18 +131,7 @@ pub union unnamed_2 {
     __f: libc::c_float,
     __u: libc::c_uint,
 }
-unsafe extern "C" fn __sputc(mut _c: libc::c_int, mut _p: *mut FILE)
- -> libc::c_int {
-    (*_p)._w -= 1;
-    if (*_p)._w >= 0i32 ||
-           (*_p)._w >= (*_p)._lbfsize &&
-               _c as libc::c_char as libc::c_int != '\n' as i32 {
-        let fresh0 = (*_p)._p;
-        (*_p)._p = (*_p)._p.offset(1);
-        *fresh0 = _c as libc::c_uchar;
-        return *fresh0 as libc::c_int
-    } else { return __swbuf(_c, _p) };
-}
+
 unsafe extern "C" fn _OSSwapInt16(mut _data: __uint16_t) -> __uint16_t {
     return ((_data as libc::c_int) << 8i32 | _data as libc::c_int >> 8i32) as
                __uint16_t;
@@ -171,19 +142,7 @@ unsafe extern "C" fn _OSSwapInt32(mut _data: __uint32_t) -> __uint32_t {
 unsafe extern "C" fn _OSSwapInt64(mut _data: __uint64_t) -> __uint64_t {
     return _data.swap_bytes();
 }
-/* * Opus wrapper for malloc(). To do your own dynamic allocation, all you need to do is replace this function and opus_free */
-unsafe extern "C" fn opus_alloc(mut size: size_t) -> *mut libc::c_void {
-    return malloc(size);
-}
-/* * Same as celt_alloc(), except that the area is only needed inside a CELT call (might cause problem with wideband though) */
-unsafe extern "C" fn opus_alloc_scratch(mut size: size_t)
- -> *mut libc::c_void {
-    return opus_alloc(size);
-}
-/* * Opus wrapper for free(). To do your own dynamic allocation, all you need to do is replace this function and opus_alloc */
-unsafe extern "C" fn opus_free(mut ptr: *mut libc::c_void) -> () {
-    free(ptr);
-}
+
 unsafe extern "C" fn __inline_isfinitef(mut __x: libc::c_float)
  -> libc::c_int {
     return (__x == __x && __x.abs() != ::std::f32::INFINITY) as libc::c_int;
