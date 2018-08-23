@@ -155,12 +155,9 @@ pub unsafe fn ec_encode_bin<W: Write>(mut _this: *mut ec_enc<W>,
 pub unsafe fn ec_enc_bit_logp<W: Write>(mut _this: *mut ec_enc<W>,
                                          mut _val: libc::c_int,
                                          mut _logp: libc::c_uint) -> Result<(), std::io::Error> {
-    let mut r: opus_uint32 = 0;
-    let mut s: opus_uint32 = 0;
-    let mut l: opus_uint32 = 0;
-    r = (*_this).rng;
-    l = (*_this).val;
-    s = r >> _logp;
+    let mut r = (*_this).rng;
+    let mut l = (*_this).val;
+    let mut s = r >> _logp;
     r = (r as libc::c_uint).wrapping_sub(s) as opus_uint32 as opus_uint32;
     if 0 != _val { (*_this).val = l.wrapping_add(r) }
     (*_this).rng = if 0 != _val { s } else { r };
