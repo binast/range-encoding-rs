@@ -203,37 +203,27 @@ pub unsafe fn ec_enc_icdf<W: Write>(mut _this: *mut ec_enc<W>,
 }
 
 pub unsafe fn ec_enc_uint<W: Write>(mut _this: *mut ec_enc<W>,
-                                     mut _fl: opus_uint32,
-                                     mut _ft: opus_uint32) -> Result<(), std::io::Error> {
-    let mut ft: libc::c_uint = 0;
-    let mut fl: libc::c_uint = 0;
-    let mut ftb: libc::c_int = 0;
-    if !(_ft > 1i32 as libc::c_uint) {
-        return celt_fatal ((*::std::mem::transmute::<&[u8; 24],
-                                             &mut [libc::c_char; 24]>(b"assertion failed: _ft>1\x00")).as_mut_ptr(),
-                   (*::std::mem::transmute::<&[u8; 14],
-                                             &mut [libc::c_char; 14]>(b"celt/entenc.c\x00")).as_mut_ptr(),
-                   180i32);
+                                    mut _fl: opus_uint32,
+                                    mut _ft: opus_uint32) -> Result<(), std::io::Error> {
+    assert!(_ft > 1);
+    _ft = _ft.wrapping_sub(1);
+    let mut ftb =
+        ::std::mem::size_of::<libc::c_uint>() as libc::c_ulong as
+            libc::c_int * 8i32 - _ft.leading_zeros() as i32;
+    if ftb > 8i32 {
+        ftb -= 8i32;
+        let ft = (_ft >> ftb).wrapping_add(1i32 as libc::c_uint);
+        let fl = _fl >> ftb;
+        ec_encode(_this, fl, fl.wrapping_add(1i32 as libc::c_uint), ft)?;
+        ec_enc_bits(_this,
+                    _fl &
+                        ((1i32 as opus_uint32) << ftb).wrapping_sub(1u32),
+                    ftb as libc::c_uint)?;
     } else {
-        _ft = _ft.wrapping_sub(1);
-        ftb =
-            ::std::mem::size_of::<libc::c_uint>() as libc::c_ulong as
-                libc::c_int * 8i32 - _ft.leading_zeros() as i32;
-        if ftb > 8i32 {
-            ftb -= 8i32;
-            ft = (_ft >> ftb).wrapping_add(1i32 as libc::c_uint);
-            fl = _fl >> ftb;
-            ec_encode(_this, fl, fl.wrapping_add(1i32 as libc::c_uint), ft)?;
-            ec_enc_bits(_this,
-                        _fl &
-                            ((1i32 as opus_uint32) << ftb).wrapping_sub(1u32),
-                        ftb as libc::c_uint)?;
-        } else {
-            ec_encode(_this, _fl, _fl.wrapping_add(1i32 as libc::c_uint),
-                      _ft.wrapping_add(1i32 as libc::c_uint))?;
-        }
-        return Ok(());
-    };
+        ec_encode(_this, _fl, _fl.wrapping_add(1i32 as libc::c_uint),
+                    _ft.wrapping_add(1i32 as libc::c_uint))?;
+    }
+    return Ok(());
 }
 
 pub unsafe fn ec_enc_bits<W: Write>(mut _this: *mut ec_enc<W>,
