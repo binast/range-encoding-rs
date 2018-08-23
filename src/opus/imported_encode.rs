@@ -274,17 +274,12 @@ unsafe fn ec_write_byte_at_end<W: Write>(mut _this: *mut ec_enc<W>,
 }
 
 pub unsafe fn ec_enc_done<W: Write>(mut _this: *mut ec_enc<W>) -> Result<(), std::io::Error> {
-    let mut window: ec_window = 0;
-    let mut used: libc::c_int = 0;
-    let mut msk: opus_uint32 = 0;
-    let mut end: opus_uint32 = 0;
-    let mut l: libc::c_int = 0;
-    l =
+    let mut l =
         32i32 -
             (::std::mem::size_of::<libc::c_uint>() as libc::c_ulong as
                  libc::c_int * 8i32 - (*_this).rng.leading_zeros() as i32);
-    msk = (1u32 << 32i32 - 1i32).wrapping_sub(1i32 as libc::c_uint) >> l;
-    end = (*_this).val.wrapping_add(msk) & !msk;
+    let mut msk = (1u32 << 32i32 - 1i32).wrapping_sub(1i32 as libc::c_uint) >> l;
+    let mut end = (*_this).val.wrapping_add(msk) & !msk;
     if end | msk >= (*_this).val.wrapping_add((*_this).rng) {
         l += 1;
         msk >>= 1i32;
@@ -300,8 +295,8 @@ pub unsafe fn ec_enc_done<W: Write>(mut _this: *mut ec_enc<W>) -> Result<(), std
     if (*_this).rem >= 0i32 || (*_this).ext > 0i32 as libc::c_uint {
         ec_enc_carry_out(_this, 0i32)?;
     };
-    window = (*_this).end_window;
-    used = (*_this).nend_bits;
+    let mut window = (*_this).end_window;
+    let mut used = (*_this).nend_bits;
     while used >= 8i32 {
         ec_write_byte_at_end(_this,
                                 window &
