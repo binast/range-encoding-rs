@@ -1,12 +1,7 @@
-// Used for opus_{encode, decode}.
-#![feature(extern_types)]
-
 extern crate libc;
 
 #[macro_use]
 extern crate log;
-
-
 
 pub mod opus {
     /// A c2rust-ified version of the Opus range decoder.
