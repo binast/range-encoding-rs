@@ -17,11 +17,8 @@ pub type __darwin_off_t = __int64_t;
 pub type opus_int32 = int32_t;
 pub type opus_uint32 = uint32_t;
 pub type ec_window = opus_uint32;
-pub type ec_ctx = ec_ctx_0;
-pub type ec_dec = ec_ctx_0;
-#[derive ( Copy , Clone )]
-#[repr(C)]
-pub struct ec_ctx_0 {
+
+pub struct ec_dec {
     pub buf: *mut libc::c_uchar,
     pub storage: opus_uint32,
     pub end_offs: opus_uint32,
@@ -34,14 +31,14 @@ pub struct ec_ctx_0 {
     pub ext: opus_uint32,
     pub rem: libc::c_int,
 }
-unsafe extern "C" fn ec_range_bytes(mut _this: *mut ec_ctx) -> opus_uint32 {
+unsafe extern "C" fn ec_range_bytes(mut _this: *mut ec_dec) -> opus_uint32 {
     return (*_this).offs;
 }
-unsafe extern "C" fn ec_get_buffer(mut _this: *mut ec_ctx)
+unsafe extern "C" fn ec_get_buffer(mut _this: *mut ec_dec)
  -> *mut libc::c_uchar {
     return (*_this).buf;
 }
-unsafe extern "C" fn ec_tell(mut _this: *mut ec_ctx) -> libc::c_int {
+unsafe extern "C" fn ec_tell(mut _this: *mut ec_dec) -> libc::c_int {
     return (*_this).nbits_total -
                (::std::mem::size_of::<libc::c_uint>() as libc::c_ulong as
                     libc::c_int * 8i32 - (*_this).rng.leading_zeros() as i32);
