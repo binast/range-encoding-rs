@@ -14,9 +14,9 @@ license = "BSD-3-Clause"
 travis-ci = { repository = "https://github.com/binast/range-encoding-rs", branch = "master" }
 
 [dependencies]
-libc = "*"
-log = "*"
+libc = "^0.2"
+log = "^0.4"
 
 [dev-dependencies]
-env_logger = "*"
+env_logger = "^0.5"
 rand = "0.5.5"
