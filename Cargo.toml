@@ -1,6 +1,6 @@
 [package]
 name = "range-encoding"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["David Teller <D.O.Teller@gmail.com>"]
 description = "An implementation of range encoding (entropy coding), extracted from Opus."
 readme = "README.md"
@@ -11,7 +11,7 @@ categories = ["algorithms", "compression"]
 license = "BSD-3-Clause"
 
 [badges]
-travis-ci = { repository = "https://github.com/binast/range-encoding-rs", branch = "master" }
+travis-ci = { repository = "binast/range-encoding-rs", branch = "master" }
 
 [dependencies]
 libc = "^0.2"
