@@ -1,6 +1,7 @@
 extern crate range_encoding;
 extern crate rand;
 
+use std::io::Cursor;
 use range_encoding::*;
 use rand::*;
 
@@ -28,7 +29,8 @@ fn probabilities_roundtrip() {
             sample.len(), encoded.len());
 
         eprintln!("Reading...");
-        let mut reader = opus::Reader::from_boxed_slice(encoded.into_boxed_slice());
+        let mut reader = opus::Reader::new(Cursor::new(encoded))
+            .expect("Could not initialize reader");
         for reference in sample.chars() {
             let index = reader.symbol(&probabilities)
                 .expect("Could not find symbol");
