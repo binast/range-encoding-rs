@@ -8,7 +8,7 @@ homepage = "https://github.com/binast/range-encoding-rs"
 repository = "https://github.com/binast/range-encoding-rs"
 keywords = ["compression", "opus", "entropy"]
 categories = ["algorithms", "compression"]
-license = "BSD-3"
+license = "BSD3"
 
 [badges]
 travis-ci = { repository = "https://github.com/binast/range-encoding-rs", branch = "master" }
