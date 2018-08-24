@@ -225,38 +225,31 @@ pub unsafe fn ec_enc_bits<W: Write>(mut _this: *mut ec_enc<W>,
                                      mut _bits: libc::c_uint) -> Result<(), std::io::Error> {
     let mut window = (*_this).end_window;
     let mut used = (*_this).nend_bits;
-    if !(_bits > 0i32 as libc::c_uint) {
-        return celt_fatal((*::std::mem::transmute::<&[u8; 26],
-                                             &mut [libc::c_char; 26]>(b"assertion failed: _bits>0\x00")).as_mut_ptr(),
-                   (*::std::mem::transmute::<&[u8; 14],
-                                             &mut [libc::c_char; 14]>(b"celt/entenc.c\x00")).as_mut_ptr(),
-                   198i32);
-    } else {
-        if (used as libc::c_uint).wrapping_add(_bits) >
-               (::std::mem::size_of::<ec_window>() as libc::c_ulong as
-                    libc::c_int * 8i32) as libc::c_uint {
-            loop  {
-                    ec_write_byte_at_end(_this,
-                                         window &
-                                             (1u32 <<
-                                                  8i32).wrapping_sub(1i32 as
-                                                                         libc::c_uint))?;
-                window >>= 8i32;
-                used -= 8i32;
-                if !(used >= 8i32) { break ; }
-            }
+    assert!(_bits > 0);
+    if (used as libc::c_uint).wrapping_add(_bits) >
+            (::std::mem::size_of::<ec_window>() as libc::c_ulong as
+                libc::c_int * 8i32) as libc::c_uint {
+        loop  {
+                ec_write_byte_at_end(_this,
+                                        window &
+                                            (1u32 <<
+                                                8i32).wrapping_sub(1i32 as
+                                                                        libc::c_uint))?;
+            window >>= 8i32;
+            used -= 8i32;
+            if !(used >= 8i32) { break ; }
         }
-        window |= _fl << used;
-        used =
-            (used as libc::c_uint).wrapping_add(_bits) as libc::c_int as
-                libc::c_int;
-        (*_this).end_window = window;
-        (*_this).nend_bits = used;
-        (*_this).nbits_total =
-            ((*_this).nbits_total as libc::c_uint).wrapping_add(_bits) as
-                libc::c_int as libc::c_int;
-        return Ok(());
-    };
+    }
+    window |= _fl << used;
+    used =
+        (used as libc::c_uint).wrapping_add(_bits) as libc::c_int as
+            libc::c_int;
+    (*_this).end_window = window;
+    (*_this).nend_bits = used;
+    (*_this).nbits_total =
+        ((*_this).nbits_total as libc::c_uint).wrapping_add(_bits) as
+            libc::c_int as libc::c_int;
+    return Ok(());
 }
 unsafe fn ec_write_byte_at_end<W: Write>(mut _this: *mut ec_enc<W>,
                                           mut _value: libc::c_uint)

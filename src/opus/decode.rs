@@ -27,11 +27,9 @@ impl Reader {
     pub fn symbol(&mut self, icdf: &CumulativeDistributionFrequency) -> Result<u32, std::io::Error> {
         let index = unsafe {
             let frequency = imported_decode::ec_decode(&mut self.state, icdf.width());
-            self.check_status()?;
             let indexed= icdf.find(frequency)
                 .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid probability"))?;
             imported_decode::ec_dec_update(&mut self.state, indexed.segment.low, indexed.segment.next, icdf.width());
-            self.check_status()?;
             indexed.index
         };
         Ok(index as u32)
@@ -53,13 +51,5 @@ impl Reader {
 
     pub fn done(self) {
         // FIXME: Nothing to do?
-    }
-
-    unsafe fn check_status(&mut self) -> Result<(), std::io::Error> {
-        let status = imported_decode::ec_get_error(&mut self.state);
-        if status != 0 {
-            unimplemented!()
-        }
-        Ok(())
     }
 }
