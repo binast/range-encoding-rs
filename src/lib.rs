@@ -1,8 +1,5 @@
 extern crate libc;
 
-#[macro_use]
-extern crate log;
-
 pub mod opus {
     /// A c2rust-ified version of the Opus range decoder.
     mod imported_decode;
