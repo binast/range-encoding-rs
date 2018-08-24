@@ -303,8 +303,3 @@ pub unsafe fn ec_enc_done<W: Write>(mut _this: *mut ec_enc<W>) -> Result<(), std
     Ok(())
 }
 
-fn celt_fatal(_str: *const libc::c_char, _file: *const libc::c_char,
-                line: libc::c_int) -> Result<(), std::io::Error>
-{
-    panic!("celt_fatal at line {}", line)
-}

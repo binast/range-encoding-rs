@@ -281,9 +281,3 @@ unsafe extern "C" fn ec_read_byte_from_end(mut _this: *mut ec_dec)
            } else { 0i32 };
 }
 
-fn celt_fatal<T>(str: *const libc::c_char, file: *const libc::c_char,
-                line: libc::c_int) -> T
-{
-    panic!("celt_fatal")
-}
-
