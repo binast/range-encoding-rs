@@ -42,7 +42,7 @@ impl<R> Reader<R> where R: std::io::Read {
     }
 
     /// Decode the next symbol in line.
-    pub fn symbol(&mut self, icdf: &mut CumulativeDistributionFrequency) -> Result<u32, std::io::Error> {
+    pub fn symbol(&mut self, icdf: &CumulativeDistributionFrequency) -> Result<u32, std::io::Error> {
         let index = unsafe {
             let frequency = imported_decode::ec_decode(&mut self.state, icdf.width());
             let indexed= icdf.find(frequency)

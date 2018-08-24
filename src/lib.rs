@@ -32,10 +32,6 @@ impl Segment {
             already_encountered: false
         }
     }
-
-    pub fn is_first_encounter(&self) -> bool {
-        !self.already_encountered
-    }
 }
 
 pub struct IndexedSegment {
@@ -77,7 +73,7 @@ impl CumulativeDistributionFrequency {
     }
 
     /// Find a value from its frequency.
-    pub fn find(&mut self, probability: u32) -> Option<IndexedSegment> {
+    pub fn find(&self, probability: u32) -> Option<IndexedSegment> {
         if probability >= self.width {
             return None
         }
@@ -91,18 +87,20 @@ impl CumulativeDistributionFrequency {
             }
             Ordering::Equal
         }).ok()?;
-        let ref mut segment = self.segments[index];
-        let result = segment.clone();
-        segment.already_encountered = true;
         Some(IndexedSegment {
             index,
-            segment: result
+            segment: self.segments[index].clone()
         })
     }
 
     /// Find a value from its index
-    pub fn at_index(&self, index: usize) -> Option<Segment> {
-        self.segments.get(index)
-            .map(|indexed| indexed.clone())
+    pub fn at_index(&mut self, index: usize) -> Option<Segment> {
+        if index >= self.segments.len() {
+            return None;
+        }
+        let ref mut segment = self.segments[index];
+        let result = segment.clone();
+        segment.already_encountered = true;
+        Some(result)
     }
 }

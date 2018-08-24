@@ -5,6 +5,9 @@ use opus::imported_encode;
 
 use std;
 
+/// A trivial container representing the fact that a symbol may need to be defined.
+pub struct AlreadyEncountered(pub bool);
+
 pub struct Writer<W> where W: std::io::Write {
     state: imported_encode::ec_enc<W>,
 }
@@ -28,13 +31,13 @@ impl<W> Writer<W> where W: std::io::Write {
     }
 
     /// Encode the next symbol in line.
-    pub fn symbol(&mut self, index: usize, icdf: &CumulativeDistributionFrequency) -> Result<(), std::io::Error> {
+    pub fn symbol(&mut self, index: usize, icdf: &mut CumulativeDistributionFrequency) -> Result<AlreadyEncountered, std::io::Error> {
         let segment = icdf.at_index(index)
           .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid symbol"))?;
         unsafe {
             imported_encode::ec_encode(&mut self.state, segment.low, segment.next, icdf.width())?;
         };
-        Ok(())
+        Ok(AlreadyEncountered(segment.already_encountered))
     }
 
 /*
