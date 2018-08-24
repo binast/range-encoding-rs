@@ -66,10 +66,9 @@ pub unsafe extern "C" fn ec_dec_init<R: Read>(mut _this: *mut ec_dec<R>) -> Resu
 }
 unsafe extern "C" fn ec_dec_normalize<R: Read>(mut _this: *mut ec_dec<R>) -> Result<(), std::io::Error> {
     while (*_this).rng <= 1u32 << 32i32 - 1i32 >> 8i32 {
-        let mut sym: libc::c_int = 0;
         (*_this).nbits_total += 8i32;
         (*_this).rng <<= 8i32;
-        sym = (*_this).rem;
+        let mut sym = (*_this).rem;
         (*_this).rem = ec_read_byte(_this)? as i32;
         sym =
             (sym << 8i32 | (*_this).rem) >>
@@ -100,9 +99,8 @@ unsafe extern "C" fn ec_read_byte<R: Read>(mut _this: *mut ec_dec<R>) -> Result<
 
 pub unsafe extern "C" fn ec_decode<R: Read>(mut _this: *mut ec_dec<R>,
                                    mut _ft: libc::c_uint) -> libc::c_uint {
-    let mut s: libc::c_uint = 0;
     (*_this).ext = celt_udiv((*_this).rng, _ft);
-    s = (*_this).val.wrapping_div((*_this).ext);
+    let mut s = (*_this).val.wrapping_div((*_this).ext);
     return _ft.wrapping_sub(s.wrapping_add(1i32 as
                                                libc::c_uint).wrapping_add(_ft.wrapping_sub(s.wrapping_add(1i32
                                                                                                               as
@@ -122,9 +120,8 @@ pub unsafe extern "C" fn ec_decode<R: Read>(mut _this: *mut ec_dec<R>,
 pub unsafe extern "C" fn ec_decode_bin<R: Read>(mut _this: *mut ec_dec<R>,
                                        mut _bits: libc::c_uint)
  -> libc::c_uint {
-    let mut s: libc::c_uint = 0;
     (*_this).ext = (*_this).rng >> _bits;
-    s = (*_this).val.wrapping_div((*_this).ext);
+    let mut s = (*_this).val.wrapping_div((*_this).ext);
     return (1u32 <<
                 _bits).wrapping_sub(s.wrapping_add(1u32).wrapping_add((1u32 <<
                                                                            _bits).wrapping_sub(s.wrapping_add(1u32))
@@ -144,8 +141,7 @@ pub unsafe extern "C" fn ec_dec_update<R: Read>(mut _this: *mut ec_dec<R>,
                                        mut _fl: libc::c_uint,
                                        mut _fh: libc::c_uint,
                                        mut _ft: libc::c_uint) -> Result<(), std::io::Error> {
-    let mut s: opus_uint32 = 0;
-    s = (*_this).ext.wrapping_mul(_ft.wrapping_sub(_fh));
+    let mut s = (*_this).ext.wrapping_mul(_ft.wrapping_sub(_fh));
     (*_this).val =
         ((*_this).val as libc::c_uint).wrapping_sub(s) as opus_uint32 as
             opus_uint32;
@@ -161,14 +157,10 @@ pub unsafe extern "C" fn ec_dec_bit_logp<R: Read>(mut _this: *mut ec_dec<R>,
                                          mut _logp: libc::c_uint)
  -> Result<i32, std::io::Error>
 {
-    let mut r: opus_uint32 = 0;
-    let mut d: opus_uint32 = 0;
-    let mut s: opus_uint32 = 0;
-    let mut ret: libc::c_int = 0;
-    r = (*_this).rng;
-    d = (*_this).val;
-    s = r >> _logp;
-    ret = (d < s) as libc::c_int;
+    let mut r = (*_this).rng;
+    let mut d = (*_this).val;
+    let mut s = r >> _logp;
+    let mut ret = (d < s) as libc::c_int;
     if 0 == ret { (*_this).val = d.wrapping_sub(s) }
     (*_this).rng = if 0 != ret { s } else { r.wrapping_sub(s) };
     ec_dec_normalize(_this)?;
