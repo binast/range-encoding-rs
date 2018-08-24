@@ -13,13 +13,29 @@ pub mod opus {
 }
 
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Segment {
     /// First value part of the segment.
-    pub low: u32,
+    low: u32,
 
     /// First value >= low **not** part of the segment.
-    pub next: u32,
+    next: u32,
+
+    /// `true` if we have already returned at least one instance of this Segment.
+    already_encountered: bool,
+}
+impl Segment {
+    pub fn new(low: u32, next: u32) -> Segment {
+        Segment {
+            low,
+            next,
+            already_encountered: false
+        }
+    }
+
+    pub fn is_first_encounter(&self) -> bool {
+        !self.already_encountered
+    }
 }
 
 pub struct IndexedSegment {
@@ -45,10 +61,7 @@ impl CumulativeDistributionFrequency {
         let mut start = 0;
         for probability in probabilities {
             let next = start + probability;
-            segments.push(Segment {
-                low: start,
-                next,
-            });
+            segments.push(Segment::new(start, next));
             start = next;
         }
         Ok(Self {
@@ -64,7 +77,7 @@ impl CumulativeDistributionFrequency {
     }
 
     /// Find a value from its frequency.
-    pub fn find(&self, probability: u32) -> Option<IndexedSegment> {
+    pub fn find(&mut self, probability: u32) -> Option<IndexedSegment> {
         if probability >= self.width {
             return None
         }
@@ -78,9 +91,12 @@ impl CumulativeDistributionFrequency {
             }
             Ordering::Equal
         }).ok()?;
+        let ref mut segment = self.segments[index];
+        let result = segment.clone();
+        segment.already_encountered = true;
         Some(IndexedSegment {
             index,
-            segment: self.segments[index]
+            segment: result
         })
     }
 

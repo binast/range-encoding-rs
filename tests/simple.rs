@@ -8,10 +8,10 @@ use rand::*;
 #[test]
 fn probabilities_roundtrip() {
     let symbols = ['g', 'a', 't', 'c'];
-    let probabilities = CumulativeDistributionFrequency::new(vec![1, 30, 5, 20])
+    let mut probabilities = CumulativeDistributionFrequency::new(vec![1, 30, 5, 20])
         .unwrap();
 
-    let test_with_sample = |sample: &str| {
+    let mut test_with_sample = |sample: &str| {
         eprintln!("Writing...");
 
         let mut writer = opus::Writer::new(vec![]);
@@ -20,7 +20,7 @@ fn probabilities_roundtrip() {
                 .cloned()
                 .position(|x| x == c)
                 .unwrap();
-            writer.symbol(index, &probabilities)
+            writer.symbol(index, &mut probabilities)
                 .expect("Could not write symbol");
         }
         let encoded = writer.done()
@@ -32,7 +32,7 @@ fn probabilities_roundtrip() {
         let mut reader = opus::Reader::new(Cursor::new(encoded))
             .expect("Could not initialize reader");
         for reference in sample.chars() {
-            let index = reader.symbol(&probabilities)
+            let index = reader.symbol(&mut probabilities)
                 .expect("Could not find symbol");
             assert_eq!(symbols[index as usize], reference);
         }
