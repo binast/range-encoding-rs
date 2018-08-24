@@ -1,12 +1,9 @@
 
-use ::{ CumulativeDistributionFrequency };
+use ::{ AlreadyEncountered, CumulativeDistributionFrequency };
 
 use opus::imported_encode;
 
 use std;
-
-/// A trivial container representing the fact that a symbol may need to be defined.
-pub struct AlreadyEncountered(pub bool);
 
 pub struct Writer<W> where W: std::io::Write {
     state: imported_encode::ec_enc<W>,

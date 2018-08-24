@@ -1,5 +1,6 @@
 extern crate libc;
 
+/// Implementation of the Opus range encoder.
 pub mod opus {
     /// A c2rust-ified version of the Opus range decoder.
     mod imported_decode;
@@ -11,6 +12,9 @@ pub mod opus {
     pub use self::encode::Writer;
     pub use self::decode::Reader;
 }
+
+/// A trivial container representing the fact that a symbol may need to be defined.
+pub struct AlreadyEncountered(pub bool);
 
 
 #[derive(Clone)]
