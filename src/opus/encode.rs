@@ -29,22 +29,21 @@ impl<W> Writer<W> where W: std::io::Write {
 
     /// Encode the next symbol in line.
     pub fn symbol(&mut self, index: usize, icdf: &mut CumulativeDistributionFrequency) -> Result<DefinitionRequirement, std::io::Error> {
-        let segment = icdf.at_index(index)
+        let mut segment = icdf.at_index(index)
           .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid symbol"))?;
         unsafe {
             imported_encode::ec_encode(&mut self.state, segment.low, segment.next, icdf.width())?;
         };
-        if icdf.already_encountered {
-            if segment.already_encountered {
-                Ok(DefinitionRequirement::Known)
-            } else {
-                Ok(DefinitionRequirement::UnknownSymbol)
-            }
-        } else {
+        let result = DefinitionRequirement {
+            symbol: !segment.already_encountered,
+            distribution_total: icdf.already_encountered,
+        };
+        if !icdf.already_encountered {
             debug_assert!(!segment.already_encountered);
             icdf.already_encountered = true;
-            Ok(DefinitionRequirement::UnknownDistributionFrequency)
         }
+        segment.already_encountered = true;
+        Ok(result)
     }
 
 /*

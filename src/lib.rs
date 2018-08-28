@@ -15,18 +15,17 @@ pub mod opus {
 
 /// Determine whether the symbol needs to be somehow
 /// injected in a dictionary.
-pub enum DefinitionRequirement {
-    /// The symbol has never been encountered in this CumulativeDistributionFrequency,
-    /// and the CumulativeDistributionFrequency itself has never been encountered.
-    UnknownDistributionFrequency,
-
-    /// The symbol has never been encountered in this CumulativeDistributionFrequency,
-    /// but the CumulativeDistributionFrequency itself has been encountered.
-    UnknownSymbol,
-
-    /// The symbol has already been encountered in this CumulativeDistributionFrequency,
-    /// so it is already in a dictionary.
-    Known
+pub struct DefinitionRequirement {
+    symbol: bool,
+    distribution_total: bool,
+}
+impl DefinitionRequirement {
+    pub fn symbol(&self) -> bool {
+        self.symbol
+    }
+    pub fn distribution_total(&self) -> bool {
+        self.distribution_total
+    }
 }
 
 
@@ -118,9 +117,6 @@ impl CumulativeDistributionFrequency {
         if index >= self.segments.len() {
             return None;
         }
-        let ref mut segment = self.segments[index];
-        let result = segment.clone();
-        segment.already_encountered = true;
-        Some(result)
+        Some(self.segments[index].clone())
     }
 }
