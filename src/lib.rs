@@ -13,8 +13,21 @@ pub mod opus {
     pub use self::decode::Reader;
 }
 
-/// A trivial container representing the fact that a symbol may need to be defined.
-pub struct AlreadyEncountered(pub bool);
+/// Determine whether the symbol needs to be somehow
+/// injected in a dictionary.
+pub enum DefinitionRequirement {
+    /// The symbol has never been encountered in this CumulativeDistributionFrequency,
+    /// and the CumulativeDistributionFrequency itself has never been encountered.
+    UnknownDistributionFrequency,
+
+    /// The symbol has never been encountered in this CumulativeDistributionFrequency,
+    /// but the CumulativeDistributionFrequency itself has been encountered.
+    UnknownSymbol,
+
+    /// The symbol has already been encountered in this CumulativeDistributionFrequency,
+    /// so it is already in a dictionary.
+    Known
+}
 
 
 #[derive(Clone)]
@@ -49,6 +62,8 @@ pub struct CumulativeDistributionFrequency {
 
     /// The width, which is exactly `segments.last.width`.
     width: u32,
+
+    already_encountered: bool,
 }
 impl CumulativeDistributionFrequency {
     // FIXME: Better errors
@@ -68,6 +83,7 @@ impl CumulativeDistributionFrequency {
             segments: segments
                 .into_boxed_slice(),
             width: start,
+            already_encountered: false,
         })
     }
 
