@@ -48,6 +48,9 @@ impl Segment {
             already_encountered: false
         }
     }
+    pub fn width(&self) -> u32 {
+        self.next - self.low
+    }
 }
 
 pub struct IndexedSegment {
