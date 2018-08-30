@@ -6,6 +6,41 @@ use range_encoding::*;
 use rand::*;
 
 #[test]
+fn probabilities_requirement() {
+    let symbols = ['g', 'a', 't', 'c'];
+    let mut probabilities = CumulativeDistributionFrequency::new(vec![1, 30, 5, 20])
+        .unwrap();
+
+    // Test initial state.
+    eprintln!("Testing initial state");
+    for _ in 0..2 {
+        for i in 0..symbols.len() {
+            let requirements = probabilities.requirements_for_index(i)
+                .expect("Could not fetch requirements for index");
+            assert!(requirements.distribution_total());
+            assert!(requirements.symbol());
+        }
+    }
+
+    // Now write a sumbol.
+    eprintln!("Writing a single symbol");
+    let mut writer = opus::Writer::new(vec![]);
+    writer.symbol(0, &mut probabilities)
+        .expect("Could not write symbol");
+
+    eprintln!("Testing modified");
+    for _ in 0..2 {
+        for i in 0..symbols.len() {
+            eprintln!("i: {}", i);
+            let requirements = probabilities.requirements_for_index(i)
+                .expect("Could not fetch requirements for index");
+            assert_eq!(requirements.distribution_total(), false); // We have now encountered the distribution.
+            assert_eq!(requirements.symbol(), i != 0); // We have written symbol 0.
+        }
+    }
+}
+
+#[test]
 fn probabilities_roundtrip() {
     let symbols = ['g', 'a', 't', 'c'];
     let mut probabilities = CumulativeDistributionFrequency::new(vec![1, 30, 5, 20])

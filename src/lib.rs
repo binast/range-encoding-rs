@@ -116,10 +116,20 @@ impl CumulativeDistributionFrequency {
     }
 
     /// Find a value from its index
-    pub fn at_index(&mut self, index: usize) -> Option<Segment> {
+    pub fn at_index<'a>(&'a mut self, index: usize) -> Option<&'a mut Segment> {
         if index >= self.segments.len() {
             return None;
         }
-        Some(self.segments[index].clone())
+        Some(&mut self.segments[index])
+    }
+
+    pub fn requirements_for_index(&self, index: usize) -> Option<DefinitionRequirement> {
+        if index >= self.segments.len() {
+            return None;
+        }
+        Some(DefinitionRequirement {
+            distribution_total: !self.already_encountered,
+            symbol: !self.segments[index].already_encountered
+        })
     }
 }

@@ -1,5 +1,5 @@
 
-use ::{ CumulativeDistributionFrequency, DefinitionRequirement };
+use ::{ CumulativeDistributionFrequency };
 
 use opus::imported_encode;
 
@@ -28,22 +28,16 @@ impl<W> Writer<W> where W: std::io::Write {
     }
 
     /// Encode the next symbol in line.
-    pub fn symbol(&mut self, index: usize, icdf: &mut CumulativeDistributionFrequency) -> Result<DefinitionRequirement, std::io::Error> {
-        let mut segment = icdf.at_index(index)
+    pub fn symbol(&mut self, index: usize, icdf: &mut CumulativeDistributionFrequency) -> Result<(), std::io::Error> {
+        let width = icdf.width();
+        icdf.already_encountered = true;
+        let segment = icdf.at_index(index)
           .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid symbol"))?;
-        unsafe {
-            imported_encode::ec_encode(&mut self.state, segment.low, segment.next, icdf.width())?;
-        };
-        let result = DefinitionRequirement {
-            symbol: !segment.already_encountered,
-            distribution_total: icdf.already_encountered,
-        };
-        if !icdf.already_encountered {
-            debug_assert!(!segment.already_encountered);
-            icdf.already_encountered = true;
-        }
         segment.already_encountered = true;
-        Ok(result)
+        unsafe {
+            imported_encode::ec_encode(&mut self.state, segment.low, segment.next, width)?;
+        };
+        Ok(())
     }
 
 /*
