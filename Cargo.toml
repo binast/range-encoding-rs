@@ -1,6 +1,6 @@
 [package]
 name = "range-encoding"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["David Teller <D.O.Teller@gmail.com>"]
 description = "An implementation of range encoding (entropy coding), extracted from Opus."
 readme = "README.md"

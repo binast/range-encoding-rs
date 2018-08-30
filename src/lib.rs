@@ -94,6 +94,12 @@ impl CumulativeDistributionFrequency {
         self.width
     }
 
+    /// Iterate through the widths of the symbols.
+    pub fn widths<'a>(&'a self) -> impl Iterator<Item = u32> + 'a {
+        self.segments.iter()
+            .map(Segment::width)
+    }
+
     /// Find a value from its frequency.
     pub fn find(&self, probability: u32) -> Option<IndexedSegment> {
         if probability >= self.width {

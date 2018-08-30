@@ -6,6 +6,17 @@ use range_encoding::*;
 use rand::*;
 
 #[test]
+fn widths() {
+    let widths = [1, 30, 5, 20];
+    let probabilities = CumulativeDistributionFrequency::new(widths.iter().cloned().collect())
+        .unwrap();
+
+    let widths2 : Vec<_> = probabilities.widths().collect();
+    assert_eq!(widths2, widths)
+}
+
+
+#[test]
 fn probabilities_requirement() {
     let symbols = ['g', 'a', 't', 'c'];
     let mut probabilities = CumulativeDistributionFrequency::new(vec![1, 30, 5, 20])
