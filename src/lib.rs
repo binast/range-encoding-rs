@@ -138,4 +138,9 @@ impl CumulativeDistributionFrequency {
             symbol: !self.segments[index].already_encountered
         })
     }
+
+    /// Return the number of values in this CDF
+    pub fn len(&self) -> usize {
+        self.segments.len()
+    }
 }

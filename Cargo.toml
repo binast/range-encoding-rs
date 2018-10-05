@@ -1,6 +1,6 @@
 [package]
 name = "range-encoding"
-version = "0.1.7"
+version = "0.1.8"
 authors = ["David Teller <D.O.Teller@gmail.com>"]
 description = "An implementation of range encoding (entropy coding), extracted from Opus."
 readme = "README.md"
@@ -16,6 +16,7 @@ travis-ci = { repository = "binast/range-encoding-rs", branch = "master" }
 [dependencies]
 libc = "^0.2"
 log = "^0.4"
+
 
 [dev-dependencies]
 env_logger = "^0.5"
