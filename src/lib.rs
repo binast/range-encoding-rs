@@ -59,7 +59,7 @@ pub struct IndexedSegment {
 }
 
 pub struct CumulativeDistributionFrequency {
-    /// Ordered, non-empty, contiguous list of segments, starting at 0.
+    /// Ordered, contiguous list of segments, starting at 0.
     segments: Box<[Segment]>,
 
     /// The width, which is exactly `segments.last.width`.
@@ -68,12 +68,7 @@ pub struct CumulativeDistributionFrequency {
     already_encountered: bool,
 }
 impl CumulativeDistributionFrequency {
-    // FIXME: Better errors
-    pub fn new(probabilities: Vec<u32>) -> Result<Self, ()> {
-        if probabilities.len() == 0 {
-            return Err(())
-        }
-
+    pub fn new(probabilities: Vec<u32>) -> Self {
         let mut segments = Vec::with_capacity(probabilities.len());
         let mut start = 0;
         for probability in probabilities {
@@ -81,12 +76,12 @@ impl CumulativeDistributionFrequency {
             segments.push(Segment::new(start, next));
             start = next;
         }
-        Ok(Self {
+        Self {
             segments: segments
                 .into_boxed_slice(),
             width: start,
             already_encountered: false,
-        })
+        }
     }
 
     /// Return the total frequency of symbols in this distribution.

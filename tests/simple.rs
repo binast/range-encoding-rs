@@ -8,8 +8,7 @@ use rand::*;
 #[test]
 fn widths() {
     let widths = [1, 30, 5, 20];
-    let probabilities = CumulativeDistributionFrequency::new(widths.iter().cloned().collect())
-        .unwrap();
+    let probabilities = CumulativeDistributionFrequency::new(widths.iter().cloned().collect());
 
     let widths2 : Vec<_> = probabilities.widths().collect();
     assert_eq!(widths2, widths)
@@ -19,8 +18,7 @@ fn widths() {
 #[test]
 fn probabilities_requirement() {
     let symbols = ['g', 'a', 't', 'c'];
-    let mut probabilities = CumulativeDistributionFrequency::new(vec![1, 30, 5, 20])
-        .unwrap();
+    let mut probabilities = CumulativeDistributionFrequency::new(vec![1, 30, 5, 20]);
 
     // Test initial state.
     eprintln!("Testing initial state");
@@ -54,8 +52,7 @@ fn probabilities_requirement() {
 #[test]
 fn probabilities_roundtrip() {
     let symbols = ['g', 'a', 't', 'c'];
-    let mut probabilities = CumulativeDistributionFrequency::new(vec![1, 30, 5, 20])
-        .unwrap();
+    let mut probabilities = CumulativeDistributionFrequency::new(vec![1, 30, 5, 20]);
 
     let mut test_with_sample = |sample: &str| {
         eprintln!("Writing...");
