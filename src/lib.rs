@@ -1,5 +1,3 @@
-extern crate libc;
-
 /// Implementation of the Opus range encoder.
 pub mod opus {
     /// A c2rust-ified version of the Opus range decoder.
