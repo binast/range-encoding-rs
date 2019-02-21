@@ -28,12 +28,10 @@ impl<W> Writer<W> where W: std::io::Write {
     }
 
     /// Encode the next symbol in line.
-    pub fn symbol(&mut self, index: usize, icdf: &mut CumulativeDistributionFrequency) -> Result<(), std::io::Error> {
+    pub fn symbol(&mut self, index: usize, icdf: &CumulativeDistributionFrequency) -> Result<(), std::io::Error> {
         let width = icdf.width();
-        icdf.already_encountered = true;
         let segment = icdf.at_index(index)
           .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid symbol"))?;
-        segment.already_encountered = true;
         unsafe {
             imported_encode::ec_encode(&mut self.state, segment.low, segment.next, width)?;
         };
@@ -54,6 +52,7 @@ impl<W> Writer<W> where W: std::io::Write {
     }
 */
 
+    /// Flush and return the underlying stream.
     pub fn done(mut self) -> Result<W, std::io::Error> {
         unsafe {
             imported_encode::ec_enc_done(&mut self.state)?;

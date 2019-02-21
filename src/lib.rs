@@ -11,22 +11,6 @@ pub mod opus {
     pub use self::decode::Reader;
 }
 
-/// Determine whether the symbol needs to be somehow
-/// injected in a dictionary.
-pub struct DefinitionRequirement {
-    symbol: bool,
-    distribution_total: bool,
-}
-impl DefinitionRequirement {
-    pub fn symbol(&self) -> bool {
-        self.symbol
-    }
-    pub fn distribution_total(&self) -> bool {
-        self.distribution_total
-    }
-}
-
-
 #[derive(Clone)]
 pub struct Segment {
     /// First value part of the segment.
@@ -34,16 +18,12 @@ pub struct Segment {
 
     /// First value >= low **not** part of the segment.
     next: u32,
-
-    /// `true` if we have already returned at least one instance of this Segment.
-    already_encountered: bool,
 }
 impl Segment {
     pub fn new(low: u32, next: u32) -> Segment {
         Segment {
             low,
             next,
-            already_encountered: false
         }
     }
     pub fn width(&self) -> u32 {
@@ -62,8 +42,6 @@ pub struct CumulativeDistributionFrequency {
 
     /// The width, which is exactly `segments.last.width`.
     width: u32,
-
-    already_encountered: bool,
 }
 impl CumulativeDistributionFrequency {
     pub fn new(probabilities: Vec<u32>) -> Self {
@@ -78,7 +56,6 @@ impl CumulativeDistributionFrequency {
             segments: segments
                 .into_boxed_slice(),
             width: start,
-            already_encountered: false,
         }
     }
 
@@ -115,21 +92,11 @@ impl CumulativeDistributionFrequency {
     }
 
     /// Find a value from its index
-    pub fn at_index<'a>(&'a mut self, index: usize) -> Option<&'a mut Segment> {
+    pub fn at_index<'a>(&'a self, index: usize) -> Option<&'a Segment> {
         if index >= self.segments.len() {
             return None;
         }
-        Some(&mut self.segments[index])
-    }
-
-    pub fn requirements_for_index(&self, index: usize) -> Option<DefinitionRequirement> {
-        if index >= self.segments.len() {
-            return None;
-        }
-        Some(DefinitionRequirement {
-            distribution_total: !self.already_encountered,
-            symbol: !self.segments[index].already_encountered
-        })
+        Some(&self.segments[index])
     }
 
     /// Return the number of values in this CDF
