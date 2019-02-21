@@ -30,8 +30,9 @@ impl<W> Writer<W> where W: std::io::Write {
     /// Encode the next symbol in line.
     pub fn symbol(&mut self, index: usize, icdf: &CumulativeDistributionFrequency) -> Result<(), std::io::Error> {
         let width = icdf.width();
-        let segment = icdf.at_index(index)
-          .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid symbol"))?;
+        let segment = icdf.at_index(index).ok_or_else(|| {
+            std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid symbol")
+        })?;
         unsafe {
             imported_encode::ec_encode(&mut self.state, segment.low, segment.next, width)?;
         };

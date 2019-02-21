@@ -1,20 +1,18 @@
-extern crate range_encoding;
 extern crate rand;
+extern crate range_encoding;
 
-use std::io::Cursor;
-use range_encoding::*;
 use rand::*;
+use range_encoding::*;
+use std::io::Cursor;
 
 #[test]
 fn widths() {
     let widths = [1, 30, 5, 20];
     let probabilities = CumulativeDistributionFrequency::new(widths.iter().cloned().collect());
 
-    let widths2 : Vec<_> = probabilities.widths().collect();
+    let widths2: Vec<_> = probabilities.widths().collect();
     assert_eq!(widths2, widths)
 }
-
-
 
 #[test]
 fn probabilities_roundtrip() {
@@ -26,23 +24,20 @@ fn probabilities_roundtrip() {
 
         let mut writer = opus::Writer::new(vec![]);
         for c in sample.chars() {
-            let index = symbols.iter()
-                .cloned()
-                .position(|x| x == c)
-                .unwrap();
-            writer.symbol(index, &mut probabilities)
+            let index = symbols.iter().cloned().position(|x| x == c).unwrap();
+            writer
+                .symbol(index, &mut probabilities)
                 .expect("Could not write symbol");
         }
-        let encoded = writer.done()
-            .expect("Could not finalize writer");
-        eprintln!("Wrote {} bytes to {} bytes",
-            sample.len(), encoded.len());
+        let encoded = writer.done().expect("Could not finalize writer");
+        eprintln!("Wrote {} bytes to {} bytes", sample.len(), encoded.len());
 
         eprintln!("Reading...");
-        let mut reader = opus::Reader::new(Cursor::new(encoded))
-            .expect("Could not initialize reader");
+        let mut reader =
+            opus::Reader::new(Cursor::new(encoded)).expect("Could not initialize reader");
         for reference in sample.chars() {
-            let index = reader.symbol(&mut probabilities)
+            let index = reader
+                .symbol(&mut probabilities)
                 .expect("Could not find symbol");
             assert_eq!(symbols[index as usize], reference);
         }
@@ -53,7 +48,7 @@ fn probabilities_roundtrip() {
     test_with_sample("gattaca");
 
     let mut small_rng = rand::rngs::SmallRng::from_entropy();
-    let larger_sample : String = (0..32)
+    let larger_sample: String = (0..32)
         .map(|_| {
             let index = small_rng.gen_range(0, symbols.len());
             symbols[index]

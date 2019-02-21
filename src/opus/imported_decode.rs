@@ -20,7 +20,10 @@ pub type opus_int32 = int32_t;
 pub type opus_uint32 = uint32_t;
 pub type ec_window = opus_uint32;
 
-pub struct ec_dec<R> where R: std::io::Read {
+pub struct ec_dec<R>
+where
+    R: std::io::Read,
+{
     pub inp: R,
     pub end_window: ec_window,
     pub nend_bits: std::os::raw::c_int,
@@ -30,59 +33,49 @@ pub struct ec_dec<R> where R: std::io::Read {
     pub ext: opus_uint32,
     pub rem: std::os::raw::c_int,
 }
-unsafe extern "C" fn celt_udiv(mut n: opus_uint32, mut d: opus_uint32)
- -> opus_uint32 {
+unsafe extern "C" fn celt_udiv(mut n: opus_uint32, mut d: opus_uint32) -> opus_uint32 {
     return n.wrapping_div(d);
 }
-unsafe extern "C" fn celt_sudiv(mut n: opus_int32, mut d: opus_int32)
- -> opus_int32 {
+unsafe extern "C" fn celt_sudiv(mut n: opus_int32, mut d: opus_int32) -> opus_int32 {
     return n / d;
 }
 
-pub unsafe extern "C" fn ec_dec_init<R: Read>(mut _this: *mut ec_dec<R>) -> Result<(), std::io::Error> {
+pub unsafe extern "C" fn ec_dec_init<R: Read>(
+    mut _this: *mut ec_dec<R>,
+) -> Result<(), std::io::Error> {
     (*_this).end_window = 0i32 as ec_window;
     (*_this).nend_bits = 0i32;
-    (*_this).nbits_total =
-        32i32 + 1i32 - (32i32 - ((32i32 - 2i32) % 8i32 + 1i32)) / 8i32 * 8i32;
+    (*_this).nbits_total = 32i32 + 1i32 - (32i32 - ((32i32 - 2i32) % 8i32 + 1i32)) / 8i32 * 8i32;
     (*_this).rng = 1u32 << (32i32 - 2i32) % 8i32 + 1i32;
     (*_this).rem = ec_read_byte(_this)? as i32;
-    (*_this).val =
-        (*_this).rng.wrapping_sub(1i32 as
-                                      std::os::raw::c_uint).wrapping_sub(((*_this).rem
-                                                                      >>
-                                                                      8i32 -
-                                                                          ((32i32
-                                                                                -
-                                                                                2i32)
-                                                                               %
-                                                                               8i32
-                                                                               +
-                                                                               1i32))
-                                                                     as
-                                                                     std::os::raw::c_uint);
+    (*_this).val = (*_this)
+        .rng
+        .wrapping_sub(1i32 as std::os::raw::c_uint)
+        .wrapping_sub(
+            ((*_this).rem >> 8i32 - ((32i32 - 2i32) % 8i32 + 1i32)) as std::os::raw::c_uint,
+        );
     ec_dec_normalize(_this)?;
     Ok(())
 }
-unsafe extern "C" fn ec_dec_normalize<R: Read>(mut _this: *mut ec_dec<R>) -> Result<(), std::io::Error> {
+unsafe extern "C" fn ec_dec_normalize<R: Read>(
+    mut _this: *mut ec_dec<R>,
+) -> Result<(), std::io::Error> {
     while (*_this).rng <= 1u32 << 32i32 - 1i32 >> 8i32 {
         (*_this).nbits_total += 8i32;
         (*_this).rng <<= 8i32;
         let mut sym = (*_this).rem;
         (*_this).rem = ec_read_byte(_this)? as i32;
-        sym =
-            (sym << 8i32 | (*_this).rem) >>
-                8i32 - ((32i32 - 2i32) % 8i32 + 1i32);
-        (*_this).val =
-            ((*_this).val <<
-                 8i32).wrapping_add((1u32 <<
-                                         8i32).wrapping_sub(1i32 as
-                                                                std::os::raw::c_uint)
-                                        & !sym as std::os::raw::c_uint) &
-                (1u32 << 32i32 - 1i32).wrapping_sub(1i32 as std::os::raw::c_uint)
-    };
+        sym = (sym << 8i32 | (*_this).rem) >> 8i32 - ((32i32 - 2i32) % 8i32 + 1i32);
+        (*_this).val = ((*_this).val << 8i32).wrapping_add(
+            (1u32 << 8i32).wrapping_sub(1i32 as std::os::raw::c_uint)
+                & !sym as std::os::raw::c_uint,
+        ) & (1u32 << 32i32 - 1i32).wrapping_sub(1i32 as std::os::raw::c_uint)
+    }
     Ok(())
 }
-unsafe extern "C" fn ec_read_byte<R: Read>(mut _this: *mut ec_dec<R>) -> Result<u8, std::io::Error> {
+unsafe extern "C" fn ec_read_byte<R: Read>(
+    mut _this: *mut ec_dec<R>,
+) -> Result<u8, std::io::Error> {
     let mut buf = [0];
     if let Err(err) = (*_this).inp.read_exact(&mut buf) {
         if let std::io::ErrorKind::UnexpectedEof = err.kind() {
@@ -96,89 +89,83 @@ unsafe extern "C" fn ec_read_byte<R: Read>(mut _this: *mut ec_dec<R>) -> Result<
     }
 }
 
-pub unsafe extern "C" fn ec_decode<R: Read>(mut _this: *mut ec_dec<R>,
-                                   mut _ft: std::os::raw::c_uint) -> std::os::raw::c_uint {
+pub unsafe extern "C" fn ec_decode<R: Read>(
+    mut _this: *mut ec_dec<R>,
+    mut _ft: std::os::raw::c_uint,
+) -> std::os::raw::c_uint {
     (*_this).ext = celt_udiv((*_this).rng, _ft);
     let mut s = (*_this).val.wrapping_div((*_this).ext);
-    return _ft.wrapping_sub(s.wrapping_add(1i32 as
-                                               std::os::raw::c_uint).wrapping_add(_ft.wrapping_sub(s.wrapping_add(1i32
-                                                                                                              as
-                                                                                                              std::os::raw::c_uint))
-                                                                              &
-                                                                              -((_ft
-                                                                                     <
-                                                                                     s.wrapping_add(1i32
-                                                                                                        as
-                                                                                                        std::os::raw::c_uint))
-                                                                                    as
-                                                                                    std::os::raw::c_int)
-                                                                                  as
-                                                                                  std::os::raw::c_uint));
+    return _ft.wrapping_sub(s.wrapping_add(1i32 as std::os::raw::c_uint).wrapping_add(
+        _ft.wrapping_sub(s.wrapping_add(1i32 as std::os::raw::c_uint))
+            & -((_ft < s.wrapping_add(1i32 as std::os::raw::c_uint)) as std::os::raw::c_int)
+                as std::os::raw::c_uint,
+    ));
 }
 
-pub unsafe extern "C" fn ec_decode_bin<R: Read>(mut _this: *mut ec_dec<R>,
-                                       mut _bits: std::os::raw::c_uint)
- -> std::os::raw::c_uint {
+pub unsafe extern "C" fn ec_decode_bin<R: Read>(
+    mut _this: *mut ec_dec<R>,
+    mut _bits: std::os::raw::c_uint,
+) -> std::os::raw::c_uint {
     (*_this).ext = (*_this).rng >> _bits;
     let mut s = (*_this).val.wrapping_div((*_this).ext);
-    return (1u32 <<
-                _bits).wrapping_sub(s.wrapping_add(1u32).wrapping_add((1u32 <<
-                                                                           _bits).wrapping_sub(s.wrapping_add(1u32))
-                                                                          &
-                                                                          -((1u32
-                                                                                 <<
-                                                                                 _bits
-                                                                                 <
-                                                                                 s.wrapping_add(1u32))
-                                                                                as
-                                                                                std::os::raw::c_int)
-                                                                              as
-                                                                              std::os::raw::c_uint));
+    return (1u32 << _bits).wrapping_sub(s.wrapping_add(1u32).wrapping_add(
+        (1u32 << _bits).wrapping_sub(s.wrapping_add(1u32))
+            & -((1u32 << _bits < s.wrapping_add(1u32)) as std::os::raw::c_int)
+                as std::os::raw::c_uint,
+    ));
 }
 
-pub unsafe extern "C" fn ec_dec_update<R: Read>(mut _this: *mut ec_dec<R>,
-                                       mut _fl: std::os::raw::c_uint,
-                                       mut _fh: std::os::raw::c_uint,
-                                       mut _ft: std::os::raw::c_uint) -> Result<(), std::io::Error> {
+pub unsafe extern "C" fn ec_dec_update<R: Read>(
+    mut _this: *mut ec_dec<R>,
+    mut _fl: std::os::raw::c_uint,
+    mut _fh: std::os::raw::c_uint,
+    mut _ft: std::os::raw::c_uint,
+) -> Result<(), std::io::Error> {
     let mut s = (*_this).ext.wrapping_mul(_ft.wrapping_sub(_fh));
     (*_this).val =
-        ((*_this).val as std::os::raw::c_uint).wrapping_sub(s) as opus_uint32 as
-            opus_uint32;
-    (*_this).rng =
-        if _fl > 0i32 as std::os::raw::c_uint {
-            (*_this).ext.wrapping_mul(_fh.wrapping_sub(_fl))
-        } else { (*_this).rng.wrapping_sub(s) };
+        ((*_this).val as std::os::raw::c_uint).wrapping_sub(s) as opus_uint32 as opus_uint32;
+    (*_this).rng = if _fl > 0i32 as std::os::raw::c_uint {
+        (*_this).ext.wrapping_mul(_fh.wrapping_sub(_fl))
+    } else {
+        (*_this).rng.wrapping_sub(s)
+    };
     ec_dec_normalize(_this)?;
     Ok(())
 }
 
-pub unsafe extern "C" fn ec_dec_bit_logp<R: Read>(mut _this: *mut ec_dec<R>,
-                                         mut _logp: std::os::raw::c_uint)
- -> Result<i32, std::io::Error>
-{
+pub unsafe extern "C" fn ec_dec_bit_logp<R: Read>(
+    mut _this: *mut ec_dec<R>,
+    mut _logp: std::os::raw::c_uint,
+) -> Result<i32, std::io::Error> {
     let mut r = (*_this).rng;
     let mut d = (*_this).val;
     let mut s = r >> _logp;
     let mut ret = (d < s) as std::os::raw::c_int;
-    if 0 == ret { (*_this).val = d.wrapping_sub(s) }
+    if 0 == ret {
+        (*_this).val = d.wrapping_sub(s)
+    }
     (*_this).rng = if 0 != ret { s } else { r.wrapping_sub(s) };
     ec_dec_normalize(_this)?;
     Ok(ret)
 }
 
-pub unsafe extern "C" fn ec_dec_icdf<R: Read>(mut _this: *mut ec_dec<R>,
-                                     mut _icdf: *const std::os::raw::c_uchar,
-                                     mut _ftb: std::os::raw::c_uint) -> Result<i32, std::io::Error> {
+pub unsafe extern "C" fn ec_dec_icdf<R: Read>(
+    mut _this: *mut ec_dec<R>,
+    mut _icdf: *const std::os::raw::c_uchar,
+    mut _ftb: std::os::raw::c_uint,
+) -> Result<i32, std::io::Error> {
     let mut t;
     let mut s = (*_this).rng;
     let mut d = (*_this).val;
     let mut r = s >> _ftb;
     let mut ret = -1i32;
-    loop  {
+    loop {
         t = s;
         ret += 1;
         s = r.wrapping_mul(*_icdf.offset(ret as isize) as std::os::raw::c_uint);
-        if !(d < s) { break ; }
+        if !(d < s) {
+            break;
+        }
     }
     (*_this).val = d.wrapping_sub(s);
     (*_this).rng = t.wrapping_sub(s);

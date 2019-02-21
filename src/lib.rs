@@ -4,11 +4,11 @@ pub mod opus {
     mod imported_decode;
     mod imported_encode;
 
-    mod encode;
     mod decode;
+    mod encode;
 
-    pub use self::encode::Writer;
     pub use self::decode::Reader;
+    pub use self::encode::Writer;
 }
 
 #[derive(Clone)]
@@ -21,10 +21,7 @@ pub struct Segment {
 }
 impl Segment {
     pub fn new(low: u32, next: u32) -> Segment {
-        Segment {
-            low,
-            next,
-        }
+        Segment { low, next }
     }
     pub fn width(&self) -> u32 {
         self.next - self.low
@@ -53,8 +50,7 @@ impl CumulativeDistributionFrequency {
             start = next;
         }
         Self {
-            segments: segments
-                .into_boxed_slice(),
+            segments: segments.into_boxed_slice(),
             width: start,
         }
     }
@@ -66,28 +62,30 @@ impl CumulativeDistributionFrequency {
 
     /// Iterate through the widths of the symbols.
     pub fn widths<'a>(&'a self) -> impl Iterator<Item = u32> + 'a {
-        self.segments.iter()
-            .map(Segment::width)
+        self.segments.iter().map(Segment::width)
     }
 
     /// Find a value from its frequency.
     pub fn find(&self, probability: u32) -> Option<IndexedSegment> {
         if probability >= self.width {
-            return None
+            return None;
         }
-        let index = self.segments.binary_search_by(|segment| {
-            use std::cmp::Ordering;
-            if segment.low > probability {
-                return Ordering::Greater
-            }
-            if segment.next <= probability {
-                return Ordering::Less
-            }
-            Ordering::Equal
-        }).ok()?;
+        let index = self
+            .segments
+            .binary_search_by(|segment| {
+                use std::cmp::Ordering;
+                if segment.low > probability {
+                    return Ordering::Greater;
+                }
+                if segment.next <= probability {
+                    return Ordering::Less;
+                }
+                Ordering::Equal
+            })
+            .ok()?;
         Some(IndexedSegment {
             index,
-            segment: self.segments[index].clone()
+            segment: self.segments[index].clone(),
         })
     }
 
